@@ -25,24 +25,65 @@ describe("walkthrough physics", () => {
     expect(findRoomAt("ground", WALK_START.x, WALK_START.z)?.id).toBe("gf-living");
   });
 
-  it("climbs the stair to the first-floor landing", () => {
-    let p = start();
-    for (const [x, z] of [[4.2, 3.5], [2.6, 3.45], [0.62, 3.45], [0.62, 5.05], [2.6, 5.05]]) p = walkTo(p, x, z);
+  // Living room → stair entry (south-east) → up the east half → half turn → up the west half → sitting area.
+  const UP_THE_STAIR: [number, number][] = [[4.0, 3.5], [3.0, 3.5], [3.0, 4.3], [3.0, 4.95], [2.0, 4.95], [2.0, 4.3], [2.0, 2.5]];
+  const climb = () => UP_THE_STAIR.reduce((p, [x, z]) => walkTo(p, x, z), start());
+
+  it("climbs the stair into the first-floor sitting area", () => {
+    const p = climb();
     expect(p.feet).toBeCloseTo(HOUSE.levels.first.ffl);
-    expect(findRoomAt(floorOf(p), p.x, p.z)?.id).toBe("ff-landing");
+    expect(findRoomAt(floorOf(p), p.x, p.z)?.id).toBe("ff-sitting");
   });
 
-  it("is stopped by the void railing", () => {
-    let p = start();
-    for (const [x, z] of [[4.2, 3.5], [2.6, 3.45], [0.62, 3.45], [0.62, 5.05], [2.6, 5.05], [3.0, 3.4], [5.5, 3.4]]) p = walkTo(p, x, z);
-    expect(p.x).toBeLessThan(3.6);
+  it("is stopped by the void railing beside the sitting area", () => {
+    const p = walkTo(climb(), 5.5, 1.0);
+    expect(p.x).toBeLessThan(3.5);
     expect(p.feet).toBeCloseTo(HOUSE.levels.first.ffl);
+  });
+
+  it("reaches Bedroom 1 along the landing over the common toilet", () => {
+    let p = climb();
+    for (const [x, z] of [[0.75, 2.5], [0.75, 6.5]]) p = walkTo(p, x, z);
+    expect(findRoomAt("first", p.x, p.z)?.id).toBe("ff-bedroom-1");
+  });
+
+  it("walks out onto the balcony through the open half of the sliding doors", () => {
+    let p = climb();
+    for (const [x, z] of [[2.6, 1.0], [2.6, -0.6]]) p = walkTo(p, x, z);
+    expect(findRoomAt("first", p.x, p.z)?.id).toBe("ff-balcony");
+    expect(walkTo(p, 2.6, -2.0).z).toBeGreaterThan(-1.2);
   });
 
   it("cannot pass through a solid wall", () => {
     // Living room → kitchen through the partition at plan z 5.5 (no door there).
     const p = walkTo({ x: 7.5, z: 4.5, feet: 0 }, 7.5, 7.0);
     expect(p.z).toBeLessThan(5.5);
+  });
+
+  it("walks out of the front door, across the porch and down the entrance steps", () => {
+    let p = start();
+    p = walkTo(p, 4.3, -2.5);
+    expect(p.z).toBeLessThan(-2);
+    expect(p.feet).toBeCloseTo(-HOUSE.dimensions.plinthHeight);
+  });
+
+  it("goes through the dining room's sliding back door onto the rear patio", () => {
+    let p = start();
+    for (const [x, z] of [[5.0, 5.0], [5.0, 7.0], [5.5, 7.9], [5.5, 9.2]]) p = walkTo(p, x, z);
+    expect(p.z).toBeGreaterThan(9);
+    expect(p.feet).toBeLessThan(0);
+  });
+
+  it("enters first-floor Bedroom 2 along the walkway by the void", () => {
+    let p = climb();
+    for (const [x, z] of [[3.0, 2.5], [4.0, 2.5], [4.0, 4.2], [4.0, 6.0]]) p = walkTo(p, x, z);
+    expect(findRoomAt("first", p.x, p.z)?.id).toBe("ff-bedroom-2");
+  });
+
+  it("enters the common toilet from Bedroom 2's back-left corner", () => {
+    let p = start();
+    for (const [x, z] of [[4.0, 2.4], [2.9, 2.4], [0.7, 2.6], [0.7, 4.0]]) p = walkTo(p, x, z);
+    expect(findRoomAt("ground", p.x, p.z)?.id).toBe("gf-common-toilet");
   });
 
   it("follows tread heights on the stair", () => {

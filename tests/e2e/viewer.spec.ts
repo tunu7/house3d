@@ -67,7 +67,7 @@ test("view modes and toggles update the controls", async ({ page }) => {
 
 test("walkthrough moves and exits", async ({ page }) => {
   await open(page);
-  await page.getByRole("button", { name: /^Walk/ }).click();
+  await page.getByRole("button", { name: /^Walk(through)?$/ }).click();
   await expect(page.getByRole("button", { name: "Exit walk" })).toBeVisible();
   const forward = page.getByRole("button", { name: "Move forward" });
   const b = (await forward.boundingBox())!;

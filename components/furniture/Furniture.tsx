@@ -8,7 +8,7 @@ import type { Facing, FloorId, FurnitureItem, FurnitureType } from "@/types/arch
 import { Basin, Shower, WC } from "./BathroomFixtures";
 import { Bed, Nightstand, Wardrobe } from "./BedroomFurniture";
 import { Chair, Console, DiningTable } from "./DiningFurniture";
-import { Counter, Fridge, Hood, UpperCabinet } from "./KitchenFurniture";
+import { BarTable, Counter, Fridge, Hood, Stool, UpperCabinet } from "./KitchenFurniture";
 import { CoffeeTable, Plant, RoundTable, Rug, Sofa } from "./LivingRoomFurniture";
 
 /** Rotation about world Y that turns local +Z toward the item's plan facing. */
@@ -33,6 +33,8 @@ const RENDER: Record<FurnitureType, (f: FurnitureItem) => ReactElement> = {
   chair: (f) => <Chair w={f.w} d={f.d} />,
   console: (f) => <Console w={f.w} d={f.d} />,
   counter: (f) => <Counter w={f.w} d={f.d} sinkAt={f.sinkAt} hobAt={f.hobAt} />,
+  barTable: (f) => <BarTable w={f.w} d={f.d} />,
+  stool: (f) => <Stool w={f.w} d={f.d} />,
   upperCabinet: (f) => <UpperCabinet w={f.w} d={f.d} elevation={f.elevation} height={f.height} />,
   hood: (f) => <Hood w={f.w} d={f.d} elevation={f.elevation} />,
   fridge: (f) => <Fridge w={f.w} d={f.d} />,

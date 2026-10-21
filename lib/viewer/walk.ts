@@ -1,6 +1,6 @@
-import { DIMENSIONS } from "@/lib/architecture/dimensions";
-import { pointInPolygon } from "@/lib/architecture/geometry";
+import { offsetOrthoPolygon, pointInPolygon } from "@/lib/architecture/geometry";
 import { HOUSE } from "@/lib/architecture/house";
+import { GROUND_LEVEL, PILLARS, PLANTERS, PORCH, REAR_PATIO, STEP_TREADS } from "@/lib/architecture/site";
 import type { FloorId, PlanPoint, PlanRect } from "@/types/architecture";
 
 /**
@@ -16,7 +16,6 @@ export const PLAYER_RADIUS = 0.22;
 export const MAX_STEP = 0.4;
 /** Feet below this are treated as the ground floor for collision. */
 const UPPER_THRESHOLD = 1.6;
-const GROUND_OUTSIDE = -DIMENSIONS.plinthHeight;
 const RAIL_THICKNESS = 0.06;
 const SITE_LIMIT = 20;
 
@@ -30,12 +29,19 @@ const lineRect = (a: PlanPoint, b: PlanPoint, t: number): PlanRect => ({
   z1: Math.max(a.z, b.z) + t / 2,
 });
 
-/** Wall footprints that reach the floor: every solid span except door openings. */
+/**
+ * Wall footprints that reach the floor: every solid span except door
+ * openings. Sliding doors are half open: the half holding both parked panels
+ * stays solid.
+ */
 function wallColliders(floor: FloorId): PlanRect[] {
   return HOUSE.walls
     .filter((w) => w.floor === floor)
     .flatMap((w) => {
-      const doors = w.openings.filter((o) => o.kind === "door").sort((a, b) => a.from - b.from);
+      const doors = w.openings
+        .filter((o) => o.kind === "door")
+        .map((o) => (o.operation === "sliding" ? { ...o, from: (o.from + o.to) / 2 } : o))
+        .sort((a, b) => a.from - b.from);
       const spans: [number, number][] = [];
       let cursor = w.from;
       for (const d of doors) {
@@ -55,7 +61,7 @@ const stairRails: PlanRect[] = HOUSE.stair.handrails.map((r) =>
 );
 
 export const COLLIDERS: Record<FloorId, PlanRect[]> = {
-  ground: [...wallColliders("ground"), ...stairRails],
+  ground: [...wallColliders("ground"), ...stairRails, ...PLANTERS.map((p) => p.rect), ...PILLARS],
   first: [
     ...wallColliders("first"),
     ...stairRails,
@@ -74,13 +80,18 @@ export function collides(x: number, z: number, rects: PlanRect[], r = PLAYER_RAD
   return rects.some((q) => x > q.x0 - r && x < q.x1 + r && z > q.z0 - r && z < q.z1 + r);
 }
 
-const firstSlab = HOUSE.slabs.find((s) => s.id === "first-floor");
+/** Upper slabs grown 2 cm so the hairline gaps between slab edges (balcony ↔ floor) are walkable. */
+const upperSlabs = HOUSE.slabs
+  .filter((s) => s.top === HOUSE.levels.first.ffl)
+  .map((s) => ({ ...s, outline: offsetOrthoPolygon(s.outline, 0.02) }));
+/** The plinth slightly overhangs the walls; its top is the ground-floor level. */
+const plinthOutline = HOUSE.slabs.find((s) => s.id === "plinth")?.outline ?? HOUSE.footprint;
 const inRect = (p: PlanPoint, r: PlanRect) => p.x >= r.x0 && p.x <= r.x1 && p.z >= r.z0 && p.z <= r.z1;
 
 /**
  * Height of the walking surface at (x, z) for someone whose feet are at
- * `feet`: a stair tread, the first-floor slab (when already upstairs), the
- * ground-floor slab, or the site outside the footprint.
+ * `feet`: a stair tread, a first-floor slab or the balcony (when upstairs), the
+ * ground-floor slab or porch, an entrance step, the rear patio, or the ground.
  */
 export function surfaceAt(x: number, z: number, feet: number): number {
   const p = { x, z };
@@ -90,13 +101,15 @@ export function surfaceAt(x: number, z: number, feet: number): number {
   }
   if (
     feet >= UPPER_THRESHOLD &&
-    firstSlab &&
-    pointInPolygon(p, firstSlab.outline) &&
-    !firstSlab.holes.some((h) => inRect(p, h))
+    upperSlabs.some((s) => pointInPolygon(p, s.outline) && !s.holes.some((h) => inRect(p, h)))
   ) {
     return HOUSE.levels.first.ffl;
   }
-  return pointInPolygon(p, HOUSE.footprint) ? HOUSE.levels.ground.ffl : GROUND_OUTSIDE;
+  if (pointInPolygon(p, plinthOutline) || inRect(p, PORCH)) return HOUSE.levels.ground.ffl;
+  const tread = STEP_TREADS.find((t) => inRect(p, t.rect));
+  if (tread) return tread.top;
+  if (inRect(p, REAR_PATIO.rect)) return REAR_PATIO.top;
+  return GROUND_LEVEL;
 }
 
 /**

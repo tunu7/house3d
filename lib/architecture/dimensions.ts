@@ -15,7 +15,7 @@ export const DIMENSIONS: Dimensions = {
   doorHeight: 2.1,
   windowSill: 0.9,
   windowHead: 2.1,
-  plinthHeight: 0.3,
+  plinthHeight: 0.45,
   parapetHeight: 0.9,
 };
 
@@ -38,10 +38,20 @@ export const GRID = {
     rightRear: 8.5,
     back: D.overallDepth,
   },
-  /** Stair / landing split on the left column. */
-  stairEast: 2.0,
-  /** Landing nib projecting into the void (user-approved addition, conflict C7). */
-  nib: { x1: 4.6, z0: 4.4 },
+  /** Width of the wet strip on the left column (common toilet, both Bedroom 1 toilets, FF landing). */
+  wet: 1.5,
+  /** Ground-floor Bedroom 1 toilet north wall (toilet in the room's front-left corner, R6). */
+  gfToiletNorth: 7.5,
+  /** First-floor Bedroom 1 toilet south wall (toilet in the room's back-left corner, R6). */
+  ffToiletSouth: 8.0,
+  /** First-floor walkway along the void's west edge, from the sitting area to Bedroom 2 (R7). */
+  walkway: { x1: 4.5, z0: 2.0 },
+  /** Cantilevered balcony in front of the first-floor sitting area (R8). */
+  balconyDepth: 1.2,
+  /** First-floor Bedroom 2 front wall: extended 1 m into the void (owner revision R3). */
+  bedroomTwoFront: 4.5,
+  /** First-floor Bedroom 2 bathroom, rear-east corner over the kitchen (owner revision R4). */
+  bath: { x0: 7.5, z0: 6.5 },
 } as const;
 
 export const LEVELS: Record<FloorId, FloorLevel> = {
@@ -61,20 +71,24 @@ export const FOOTPRINT: PlanPoint[] = [
   { x: GRID.x.left, z: GRID.z.back },
 ];
 
-/** Double-height void over the living room, excluding the landing nib. */
-export const VOID_OUTLINE: PlanPoint[] = [
-  { x: GRID.x.split, z: GRID.z.front },
-  { x: GRID.x.right, z: GRID.z.front },
-  { x: GRID.x.right, z: GRID.z.band2 },
-  { x: GRID.nib.x1, z: GRID.z.band2 },
-  { x: GRID.nib.x1, z: GRID.nib.z0 },
-  { x: GRID.x.split, z: GRID.nib.z0 },
+/** Double-height void over the living room: L-shaped around the first-floor walkway. */
+export const VOID_RECTS: PlanRect[] = [
+  { x0: GRID.x.split, x1: GRID.walkway.x1, z0: GRID.z.front, z1: GRID.walkway.z0 },
+  { x0: GRID.walkway.x1, x1: GRID.x.right, z0: GRID.z.front, z1: GRID.bedroomTwoFront },
 ];
 
-/** Clear stair well (inner wall faces), open through the first-floor slab. */
+/** Balcony outside the first-floor front wall, the width of the sitting area. */
+export const BALCONY_RECT: PlanRect = {
+  x0: GRID.x.left,
+  x1: GRID.x.split,
+  z0: GRID.z.front - GRID.balconyDepth,
+  z1: GRID.z.front,
+};
+
+/** Clear stair well between the wet strip and the living room, open through the first-floor slab. */
 export const STAIR_OPENING: PlanRect = {
-  x0: GRID.x.left + D.exteriorWall,
-  x1: GRID.stairEast,
+  x0: GRID.wet + D.interiorWall / 2,
+  x1: GRID.x.split - D.interiorWall / 2,
   z0: GRID.z.band1 + D.interiorWall / 2,
   z1: GRID.z.band2 - D.interiorWall / 2,
 };

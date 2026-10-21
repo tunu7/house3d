@@ -100,7 +100,7 @@ export function summarizeRoom(room: Room): RoomSummary {
     sizeLabel: `${fmt(x1 - x0)} m × ${fmt(z1 - z0)} m`,
     shape: rectangular ? "rectangular" : "L-shaped",
     nominalArea: roomArea(room),
-    clearArea: room.kind === "void" ? roomArea(room) : clearArea(room),
+    clearArea: room.kind === "void" || room.kind === "balcony" ? roomArea(room) : clearArea(room),
     height: room.kind === "living" ? HOUSE.levels.first.ffl + HOUSE.levels.first.ceilingHeight : level.ceilingHeight,
   };
 }

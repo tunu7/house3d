@@ -25,28 +25,24 @@ function place(floor: FloorId, rooms: Record<string, Spec[]>): FurnitureItem[] {
   });
 }
 
-// Bedroom 1 and its attached toilet repeat on both floors (stacked plan).
-const bedroomOne = (): Spec[] => [
-  item("bed", 1.23, 6.8, 1.6, 2.0, "+x"),
-  item("nightstand", 0.43, 5.79, 0.4, 0.4, "+x"),
-  item("nightstand", 0.43, 7.81, 0.4, 0.4, "+x"),
-  item("wardrobe", 1.1, 9.47, 1.6, 0.6, "-z"),
-];
-
-const attachedToilet = (): Spec[] => [
-  item("shower", 2.465, 9.365, 0.8, 0.8, "-z", { screens: ["front", "right"] }),
-  item("wc", 3.1, 9.445, 0.4, 0.65, "-z"),
-  item("basin", 3.21, 8.45, 0.45, 0.35, "-x"),
-];
-
 export const FURNITURE: FurnitureItem[] = [
   ...place("ground", {
-    "gf-bedroom-1": bedroomOne(),
-    "gf-attached-toilet": attachedToilet(),
+    // Bed against the back wall; wardrobe on the front wall, clear of both doors.
+    "gf-bedroom-1": [
+      item("bed", 1.9, 8.77, 1.6, 2.0, "-z"),
+      item("nightstand", 0.6, 9.55, 0.4, 0.4, "-z"),
+      item("nightstand", 3.15, 9.55, 0.4, 0.4, "-z"),
+      item("wardrobe", 2.3, 5.86, 1.4, 0.6, "+z"),
+    ],
+    "gf-attached-toilet": [
+      item("shower", 0.615, 5.95, 0.77, 0.77, "+x", { screens: ["front", "right"] }),
+      item("wc", 0.555, 6.75, 0.4, 0.65, "+x"),
+      item("basin", 0.55, 7.265, 0.45, 0.35, "-z"),
+    ],
     "gf-common-toilet": [
-      item("shower", 3.065, 5.065, 0.75, 0.75, "-z", { screens: ["front", "left"] }),
-      item("wc", 2.4, 5.115, 0.4, 0.65, "-z"),
-      item("basin", 2.235, 4.35, 0.45, 0.35, "+x"),
+      item("shower", 0.615, 5.055, 0.77, 0.77, "-z", { screens: ["front", "right"] }),
+      item("wc", 1.115, 3.85, 0.4, 0.65, "-x"),
+      item("basin", 0.405, 4.3, 0.45, 0.35, "+x"),
     ],
     "gf-dining": [
       item("diningTable", 5.0, 7.0, 1.6, 0.9, "-z"),
@@ -55,19 +51,23 @@ export const FURNITURE: FurnitureItem[] = [
         item("chair", x, 7.75, 0.45, 0.45, "-z"),
       ]),
       item("console", 3.76, 7.6, 1.0, 0.4, "+x"),
+      // Stools at the breakfast table that replaces the kitchen wall (R5).
+      item("stool", 6.25, 6.1, 0.35, 0.35, "+x"),
+      item("stool", 6.25, 6.8, 0.35, 0.35, "+x"),
       item("plant", 6.18, 8.0, 0.4, 0.4, "-z"),
     ],
     "gf-kitchen": [
+      item("barTable", 6.85, 6.45, 1.3, 0.5, "-x"),
       item("counter", 7.665, 7.97, 2.21, 0.6, "-z", { sinkAt: 0.135 }),
       item("counter", 8.47, 6.935, 1.47, 0.6, "-x", { hobAt: 0.035 }),
       item("fridge", 8.42, 5.88, 0.64, 0.7, "-x"),
       item("hood", 8.545, 6.9, 0.7, 0.45, "-x", { elevation: 1.6 }),
       item("upperCabinet", 6.93, 8.095, 0.74, 0.35, "-z", { elevation: 1.5, height: 0.7 }),
     ],
+    // One nightstand only: the back-left corner is the way to the common toilet (R6).
     "gf-bedroom-2": [
-      item("bed", 1.23, 1.6, 1.5, 2.0, "+x"),
-      item("nightstand", 0.43, 0.6, 0.4, 0.4, "+x"),
-      item("nightstand", 0.43, 2.6, 0.4, 0.4, "+x"),
+      item("bed", 1.23, 1.45, 1.5, 2.0, "+x"),
+      item("nightstand", 0.43, 0.45, 0.4, 0.4, "+x"),
       item("wardrobe", 3.14, 0.9, 1.2, 0.6, "-x"),
     ],
     "gf-living": [
@@ -82,22 +82,47 @@ export const FURNITURE: FurnitureItem[] = [
     ],
   }),
   ...place("first", {
-    "ff-bedroom-1": bedroomOne(),
-    "ff-attached-toilet": attachedToilet(),
-    "ff-bedroom-2": [
-      item("rug", 6.2, 7.0, 2.6, 2.0, "-z"),
-      item("bed", 6.2, 7.22, 1.8, 2.1, "-z"),
-      item("nightstand", 5.0, 8.07, 0.45, 0.4, "-z"),
-      item("nightstand", 7.4, 8.07, 0.45, 0.4, "-z"),
-      item("wardrobe", 3.86, 7.4, 1.6, 0.6, "+x"),
-      item("plant", 8.5, 5.85, 0.4, 0.4, "-z"),
+    // Bed against the shared wall with Bedroom 2; wardrobe at the back.
+    "ff-bedroom-1": [
+      item("bed", 2.44, 7.0, 1.6, 2.0, "-x"),
+      item("nightstand", 3.24, 5.8, 0.4, 0.4, "-x"),
+      item("wardrobe", 2.45, 9.47, 1.6, 0.6, "-z"),
     ],
+    "ff-attached-toilet": [
+      item("shower", 0.615, 9.38, 0.77, 0.77, "-z", { screens: ["front", "right"] }),
+      item("wc", 1.115, 8.45, 0.4, 0.65, "-x"),
+      item("basin", 1.265, 9.2, 0.45, 0.35, "-x"),
+    ],
+    // Revised 5.5 × 4.0 m room: bed against the Bedroom 1 wall, wardrobe on the
+    // void-side wall, reading chair in the alcove beside the bathroom.
+    "ff-bedroom-2": [
+      item("rug", 5.0, 6.95, 2.4, 2.2, "-z"),
+      item("bed", 4.61, 6.95, 1.8, 2.1, "+x"),
+      item("nightstand", 3.76, 5.8, 0.4, 0.4, "+x"),
+      item("nightstand", 3.76, 8.065, 0.4, 0.4, "+x"),
+      item("wardrobe", 5.9, 4.86, 1.8, 0.6, "+z"),
+      item("armchair", 8.3, 5.4, 0.8, 0.8, "-x"),
+      item("plant", 7.0, 8.0, 0.4, 0.4, "-z"),
+    ],
+    "ff-bathroom": [
+      item("shower", 8.395, 7.895, 0.75, 0.75, "-z", { screens: ["front", "left"] }),
+      item("wc", 7.8, 7.945, 0.4, 0.65, "-z"),
+      item("basin", 8.595, 6.975, 0.45, 0.35, "-x"),
+    ],
+    // Open lounge: sofa on the west wall facing the void, clear path to the balcony doors.
     "ff-sitting": [
-      item("rug", 1.75, 1.6, 2.0, 1.8, "-z"),
-      item("sofa", 0.655, 1.35, 2.1, 0.85, "+x"),
-      item("sofa", 1.85, 0.655, 1.5, 0.85, "+z"),
-      item("roundTable", 1.85, 1.85, 0.7, 0.7, "-z"),
-      item("plant", 3.15, 0.5, 0.4, 0.4, "-z"),
+      item("rug", 1.6, 1.6, 2.0, 1.8, "-z"),
+      item("sofa", 0.655, 1.6, 2.0, 0.85, "+x"),
+      item("roundTable", 1.75, 1.6, 0.7, 0.7, "-z"),
+      item("armchair", 2.75, 1.6, 0.8, 0.8, "-x"),
+      item("plant", 3.1, 2.65, 0.4, 0.4, "-z"),
+    ],
+    "ff-balcony": [
+      item("armchair", 1.05, -0.62, 0.65, 0.65, "+x"),
+      item("roundTable", 1.75, -0.62, 0.45, 0.45, "-z"),
+      item("armchair", 2.45, -0.62, 0.65, 0.65, "-x"),
+      item("plant", 0.3, -0.85, 0.36, 0.36, "-z"),
+      item("plant", 3.2, -0.85, 0.36, 0.36, "-z"),
     ],
   }),
 ];

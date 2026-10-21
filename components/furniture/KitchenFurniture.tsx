@@ -58,3 +58,25 @@ export function Fridge({ w, d }: PieceProps) {
     </group>
   );
 }
+
+/** Counter-height breakfast table between kitchen and dining (R5): slab top on two panel legs. */
+export function BarTable({ w, d }: PieceProps) {
+  return (
+    <group>
+      <B p={[0, TOP - 0.02, 0]} s={[w, 0.04, d]} m={FURN.oak} />
+      {[-1, 1].map((s) => (
+        <B key={s} p={[s * (w / 2 - 0.06), (TOP - 0.04) / 2, 0]} s={[0.04, TOP - 0.04, d - 0.08]} m={FURN.oak} />
+      ))}
+    </group>
+  );
+}
+
+export function Stool({ w }: PieceProps) {
+  return (
+    <group>
+      <Cyl p={[0, 0.62, 0]} r={w / 2} h={0.05} m={FURN.walnut} seg={20} />
+      <Cyl p={[0, 0, 0]} r={0.025} h={0.62} m={FURN.dark} />
+      <Cyl p={[0, 0, 0]} r={w / 2 - 0.03} h={0.015} m={FURN.dark} seg={20} />
+    </group>
+  );
+}

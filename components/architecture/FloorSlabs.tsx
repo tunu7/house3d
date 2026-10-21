@@ -5,11 +5,21 @@ import type { FloorId } from "@/types/architecture";
 import { MATERIALS } from "./materials";
 import { SlabMesh } from "./SlabMesh";
 
-/** The slab a floor stands on: the plinth for the ground floor, the suspended slab for the first. */
+/** The slabs a floor stands on: the plinth for the ground floor; the suspended slab and balcony for the first. */
 export function FloorSlab({ floor }: { floor: FloorId }) {
-  const slab = floor === "ground"
-    ? HOUSE.slabs.find((s) => s.id === "plinth")
-    : HOUSE.slabs.find((s) => s.id === "first-floor");
-  if (!slab) return null;
-  return <SlabMesh slab={slab} material={floor === "ground" ? MATERIALS.plinth : MATERIALS.slab} />;
+  const slabs = floor === "ground"
+    ? HOUSE.slabs.filter((s) => s.id === "plinth")
+    : HOUSE.slabs.filter((s) => s.top === HOUSE.levels.first.ffl);
+  return (
+    <>
+      {slabs.map((slab) => (
+        <SlabMesh
+          key={slab.id}
+          slab={slab}
+          // The balcony's exposed edge reads as a white band, as in the reference photo (R9).
+          material={floor === "ground" ? MATERIALS.plinth : slab.id === "balcony" ? MATERIALS.eave : MATERIALS.slab}
+        />
+      ))}
+    </>
+  );
 }

@@ -19,6 +19,7 @@ const FINISH: Partial<Record<RoomKind, FloorFinish>> = {
   living: "marble",
   dining: "marble",
   circulation: "marble",
+  balcony: "wood",
 };
 
 /**

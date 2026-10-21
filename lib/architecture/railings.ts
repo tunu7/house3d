@@ -1,31 +1,36 @@
 import type { Railing } from "@/types/architecture";
-import { DIMENSIONS, GRID, STAIR_OPENING } from "./dimensions";
+import { BALCONY_RECT, DIMENSIONS, GRID, STAIR_OPENING } from "./dimensions";
 
 /**
- * First-floor guard rails. Each sits just inside the slab edge it protects:
- * the landing and nib edges over the double-height void, and the side of the
- * stair opening that the stair does not arrive on.
+ * First-floor guard rails, each set just inside the slab edge it protects:
+ * the sitting area and walkway edges over the double-height void, the stair
+ * well (except where the stair arrives), and the balcony.
  */
 
-const { x, z, nib } = GRID;
+const { x, z, walkway, bedroomTwoFront } = GRID;
 const HI = DIMENSIONS.interiorWall / 2;
 const GUARD_HEIGHT = 1.0;
 /** Rail centreline set back from the slab edge. */
 const SETBACK = 0.03;
-/** Width of the stair's top flight, where the stair arrives and no rail is needed. */
-const STAIR_ARRIVAL = 0.8;
+const S = STAIR_OPENING;
+/** The stair arrives along the west half of the well's south edge. */
+const STAIR_ARRIVAL_X1 = (S.x0 + S.x1) / 2;
 
 const rail = (id: string, axis: "x" | "z", at: number, from: number, to: number): Railing => ({
   id, floor: "first", axis, at, from, to, height: GUARD_HEIGHT,
 });
 
-const edgeX = x.split + HI - SETBACK;
-const nibZ = nib.z0 + SETBACK;
-const nibX = nib.x1 - SETBACK;
-
 export const RAILINGS: Railing[] = [
-  rail("ff-rail-landing", "z", edgeX, z.band1 + HI, nibZ),
-  rail("ff-rail-nib-south", "x", nibZ, edgeX, nibX),
-  rail("ff-rail-nib-east", "z", nibX, nibZ, z.band2 - HI),
-  rail("ff-rail-stair", "z", STAIR_OPENING.x1 + SETBACK, STAIR_OPENING.z0, STAIR_OPENING.z1 - STAIR_ARRIVAL),
+  // Void edges.
+  rail("ff-rail-sitting-east", "z", x.split - SETBACK, z.front + DIMENSIONS.exteriorWall, walkway.z0 + SETBACK),
+  rail("ff-rail-walkway-south", "x", walkway.z0 + SETBACK, x.split - SETBACK, walkway.x1 - SETBACK),
+  rail("ff-rail-walkway-east", "z", walkway.x1 - SETBACK, walkway.z0 + SETBACK, bedroomTwoFront - HI),
+  // Stair well: landing side, walkway side, and the half of the sitting-area side the stair doesn't use.
+  rail("ff-rail-stair-west", "z", S.x0 - SETBACK, S.z0, S.z1),
+  rail("ff-rail-stair-east", "z", S.x1 + SETBACK, S.z0, bedroomTwoFront - HI),
+  rail("ff-rail-stair-south", "x", S.z0 - SETBACK, STAIR_ARRIVAL_X1, S.x1 + SETBACK),
+  // Balcony.
+  rail("ff-rail-balcony-front", "x", BALCONY_RECT.z0 + SETBACK, BALCONY_RECT.x0 + SETBACK, BALCONY_RECT.x1 - SETBACK),
+  rail("ff-rail-balcony-west", "z", BALCONY_RECT.x0 + SETBACK, BALCONY_RECT.z0 + SETBACK, BALCONY_RECT.z1 - 2 * SETBACK),
+  rail("ff-rail-balcony-east", "z", BALCONY_RECT.x1 - SETBACK, BALCONY_RECT.z0 + SETBACK, BALCONY_RECT.z1 - 2 * SETBACK),
 ];

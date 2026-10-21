@@ -82,6 +82,12 @@ export function RoomDetails({ summary, showHeader = true }: { summary: RoomSumma
         {room.kind !== "void" && <Row label="Clear area ≈">{m2(summary.clearArea)}</Row>}
         <Row label="Ceiling height">{summary.height.toFixed(1)} m</Row>
         {room.drawingLabel && <Row label="On drawing">{room.drawingLabel}</Row>}
+        {room.brief && (
+          <Row label="Owner revision">
+            {room.brief.label}
+            {room.brief.includes?.length ? <span className="block text-[11px] font-normal text-stone-500">incl. {room.brief.includes.map((id) => HOUSE.rooms.find((r) => r.id === id)?.name ?? id).join(", ")}</span> : null}
+          </Row>
+        )}
       </dl>
       {room.notes && room.notes.length > 0 && (
         <ul className="mt-2 space-y-1 rounded-lg bg-stone-50 p-2 text-xs leading-relaxed text-stone-600">

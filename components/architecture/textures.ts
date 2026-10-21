@@ -112,3 +112,61 @@ export function floorMaterials(): Record<FloorFinish, THREE.MeshStandardMaterial
   };
   return cache;
 }
+
+/** Honed dark stone: mottled charcoal with fine speckle and faint coursing joints. */
+function stone(ctx: CanvasRenderingContext2D, rand: () => number) {
+  ctx.fillStyle = "#4b4a48";
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  for (let i = 0; i < 2600; i++) {
+    const r = 1 + rand() * 3;
+    ctx.fillStyle = `rgba(${rand() > 0.5 ? "255,255,255" : "0,0,0"},${0.04 + rand() * 0.08})`;
+    ctx.fillRect(rand() * SIZE, rand() * SIZE, r, r);
+  }
+  ctx.strokeStyle = "rgba(20,20,20,0.35)";
+  ctx.lineWidth = 2;
+  for (let y = SIZE / 4; y < SIZE; y += SIZE / 4) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(SIZE, y);
+    ctx.stroke();
+  }
+}
+
+/** Vertical teak cladding boards with fine grain. */
+function cladding(ctx: CanvasRenderingContext2D, rand: () => number) {
+  const boards = 6;
+  const bw = SIZE / boards;
+  for (let i = 0; i < boards; i++) {
+    ctx.fillStyle = shade("#a8693a", (rand() - 0.5) * 0.06);
+    ctx.fillRect(i * bw, 0, bw, SIZE);
+    ctx.strokeStyle = "rgba(60,30,10,0.12)";
+    for (let g = 0; g < 8; g++) {
+      const gx = i * bw + 3 + rand() * (bw - 6);
+      ctx.beginPath();
+      ctx.moveTo(gx, 0);
+      ctx.bezierCurveTo(gx + 2, SIZE / 3, gx - 2, (2 * SIZE) / 3, gx, SIZE);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "rgba(40,20,5,0.4)";
+    ctx.fillRect(i * bw, 0, 2, SIZE);
+  }
+}
+
+export type FacadeFinish = "stone" | "cladding";
+
+let facadeCache: Record<FacadeFinish, THREE.MeshStandardMaterial> | null = null;
+
+/** Facade materials from the owner's reference photo (R9), created on first use. */
+export function facadeMaterials(): Record<FacadeFinish, THREE.MeshStandardMaterial> {
+  if (!facadeCache) {
+    const stoneMap = canvasTexture(1, stone, 53);
+    stoneMap.repeat.set(1, 1);
+    const cladMap = canvasTexture(1, cladding, 61);
+    cladMap.repeat.set(1, 1);
+    facadeCache = {
+      stone: new THREE.MeshStandardMaterial({ map: stoneMap, roughness: 0.75 }),
+      cladding: new THREE.MeshStandardMaterial({ map: cladMap, roughness: 0.55 }),
+    };
+  }
+  return facadeCache;
+}

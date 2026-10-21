@@ -1,5 +1,6 @@
 import type { FloorId, HouseModel, PlanPoint, PlanRect, Slab } from "@/types/architecture";
 import { furnitureFootprint } from "./furniture";
+import { ENTRANCE_STEPS, STEP_RISER } from "./site";
 import {
   labelArea,
   pointInPolygon,
@@ -52,7 +53,8 @@ export function validateHouse(model: HouseModel): ValidationIssue[] {
   push("info", "footprint", `Footprint area ${fmt(footprintArea)} m²`);
 
   for (const floor of ["ground", "first"] as FloorId[]) {
-    const rooms = model.rooms.filter((r) => r.floor === floor);
+    // Balconies are outside the footprint: checked against their own slab below.
+    const rooms = model.rooms.filter((r) => r.floor === floor && r.kind !== "balcony");
 
     // Rects are well-formed and inside the footprint (the L-shape is
     // orthogonally convex, so four corners inside ⇒ rect inside).
@@ -86,10 +88,21 @@ export function validateHouse(model: HouseModel): ValidationIssue[] {
       push("info", "coverage", `${floor}: rooms tile the footprint exactly (${fmt(total)} m²)`);
     }
 
-    // Deviations from the drawing's written sizes.
+    // Deviations from the drawing's written sizes. An owner revision (brief)
+    // supersedes the drawing and must match exactly, counting carved-out rooms.
     for (const room of rooms) {
-      const labelled = labelArea(room.drawingLabel);
       const actual = roomArea(room);
+      if (room.brief) {
+        const included = (room.brief.includes ?? []).map((id) => model.rooms.find((r) => r.id === id));
+        if (included.some((r) => !r)) push("error", "brief", `${room.id}: brief includes an unknown room`);
+        const total = actual + included.reduce((s, r) => s + (r ? roomArea(r) : 0), 0);
+        const target = labelArea(room.brief.label);
+        if (target !== null && Math.abs(target - total) > 0.01) {
+          push("error", "brief", `${room.id}: ${fmt(total)} m² does not match owner revision "${room.brief.label}" (${fmt(target)} m²)`);
+        }
+        continue;
+      }
+      const labelled = labelArea(room.drawingLabel);
       if (labelled !== null && Math.abs(labelled - actual) > 0.01) {
         push("warning", "drawing", `${room.id}: modelled ${fmt(actual)} m² vs drawing "${room.drawingLabel}" (${fmt(labelled)} m²)`);
       }
@@ -148,7 +161,7 @@ export function validateHouse(model: HouseModel): ValidationIssue[] {
     push("info", "slab", `First-floor slab ${fmt(polygonArea(firstSlab.outline) - holeArea)} m² (stair opening ${fmt(holeArea)} m²)`);
 
     // Every non-void, non-stair first-floor room must be supported by the slab.
-    for (const room of model.rooms.filter((r) => r.floor === "first" && r.kind !== "void" && r.kind !== "stair")) {
+    for (const room of model.rooms.filter((r) => r.floor === "first" && !["void", "stair", "balcony"].includes(r.kind))) {
       for (const r of room.rects) {
         const c = { x: (r.x0 + r.x1) / 2, z: (r.z0 + r.z1) / 2 };
         if (!pointOnSlab(c, firstSlab)) {
@@ -190,20 +203,26 @@ export function validateHouse(model: HouseModel): ValidationIssue[] {
 
   // Doors need hinge/swing data to be rendered.
   for (const o of model.walls.flatMap((w) => w.openings)) {
-    if (o.kind === "door" && (o.hinge === undefined || o.swing === undefined)) {
+    if (o.kind === "door" && o.operation !== "sliding" && (o.hinge === undefined || o.swing === undefined)) {
       push("error", "opening", `${o.id}: door missing hinge/swing`);
     }
   }
 
-  // Railings stand on the first-floor slab.
-  if (firstSlab) {
-    for (const r of model.railings) {
-      const ends = r.axis === "x"
-        ? [{ x: r.from, z: r.at }, { x: r.to, z: r.at }]
-        : [{ x: r.at, z: r.from }, { x: r.at, z: r.to }];
-      if (!ends.every((p) => pointOnSlab(p, firstSlab) || pointInPolygon(p, firstSlab.outline))) {
-        push("error", "railing", `${r.id}: not supported by the first-floor slab`);
-      }
+  // Railings stand on a first-floor slab (main floor or balcony).
+  const upperSlabs = model.slabs.filter((s) => s.top === model.levels.first.ffl);
+  for (const r of model.railings) {
+    const ends = r.axis === "x"
+      ? [{ x: r.from, z: r.at }, { x: r.to, z: r.at }]
+      : [{ x: r.at, z: r.from }, { x: r.at, z: r.to }];
+    if (!ends.every((p) => upperSlabs.some((s) => pointInPolygon(p, s.outline)))) {
+      push("error", "railing", `${r.id}: not supported by a first-floor slab`);
+    }
+  }
+  // Balconies sit on a slab of their own.
+  for (const b of model.rooms.filter((r) => r.kind === "balcony")) {
+    for (const r of b.rects) {
+      const c = { x: (r.x0 + r.x1) / 2, z: (r.z0 + r.z1) / 2 };
+      if (!upperSlabs.some((s) => pointInPolygon(c, s.outline))) push("error", "balcony", `${b.id}: no slab under it`);
     }
   }
 
@@ -243,6 +262,17 @@ export function validateHouse(model: HouseModel): ValidationIssue[] {
     }
   }
   push("info", "furniture", `${model.furniture.length} furniture items and fixtures placed`);
+
+  // Entrance steps climb exactly the plinth height in comfortable risers.
+  const riserTotal = ENTRANCE_STEPS.risers * STEP_RISER;
+  if (Math.abs(riserTotal - model.dimensions.plinthHeight) > EPS) {
+    push("error", "site", `Entrance steps rise ${fmt(riserTotal)} m, plinth is ${fmt(model.dimensions.plinthHeight)} m`);
+  }
+  push(
+    STEP_RISER <= RISER_RANGE[1] ? "info" : "warning",
+    "site",
+    `Entrance: ${ENTRANCE_STEPS.risers} risers × ${(STEP_RISER * 1000).toFixed(0)} mm, flower planters both sides`,
+  );
 
   return issues;
 }

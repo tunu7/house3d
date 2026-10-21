@@ -30,7 +30,8 @@ export type RoomKind =
   | "sitting"
   | "circulation"
   | "stair"
-  | "void";
+  | "void"
+  | "balcony";
 
 export interface Room {
   id: string;
@@ -43,6 +44,11 @@ export interface Room {
   drawingLabel?: string;
   /** Reconciliation notes shown alongside the room. */
   notes?: string[];
+  /**
+   * Owner's revised size, which supersedes the drawing label. `includes`
+   * lists rooms carved out of this one that count toward that size.
+   */
+  brief?: { label: string; includes?: string[] };
 }
 
 export type OpeningKind = "door" | "window" | "vent";
@@ -62,6 +68,10 @@ export interface Opening {
   hinge?: "start" | "end";
   /** Doors: side the leaf swings to, along the wall's fixed axis (+1 = increasing plan coordinate). */
   swing?: 1 | -1;
+  /** Doors: hinged leaf (default) or a two-panel sliding door. */
+  operation?: "swing" | "sliding";
+  /** Sliding doors: metal grille (default) or framed glass panels. */
+  panel?: "grille" | "glass";
 }
 
 export type WallKind = "exterior" | "interior";
@@ -147,6 +157,8 @@ export type FurnitureType =
   | "chair"
   | "console"
   | "counter"
+  | "barTable"
+  | "stool"
   | "upperCabinet"
   | "hood"
   | "fridge"

@@ -20,8 +20,9 @@ describe("house model validation", () => {
 
   it("only warns about known, documented deviations", () => {
     const warnings = issues.filter((i) => i.level === "warning").map((i) => i.message);
-    expect(warnings).toHaveLength(5);
-    expect(warnings.some((w) => w.includes("Flight width"))).toBe(true);
+    // Bedroom 1 is L-shaped on both floors (toilet inside its 3.5 × 4.5 m), and dining is 3.0 m wide.
+    expect(warnings).toHaveLength(3);
+    expect(warnings.every((w) => /bedroom-1|dining/.test(w))).toBe(true);
   });
 });
 
@@ -31,32 +32,34 @@ describe("footprint and rooms", () => {
   });
 
   it.each(["ground", "first"] as const)("%s floor rooms tile the footprint exactly", (floor) => {
-    const total = HOUSE.rooms.filter((r) => r.floor === floor).reduce((s, r) => s + roomArea(r), 0);
+    const total = HOUSE.rooms.filter((r) => r.floor === floor && r.kind !== "balcony").reduce((s, r) => s + roomArea(r), 0);
     expect(total).toBeCloseTo(81.75, 6);
   });
 
   it("matches the drawing's written sizes where reconciled", () => {
     expect(roomArea(room("gf-living"))).toBeCloseTo(5.5 * 5.5);
     expect(roomArea(room("gf-kitchen"))).toBeCloseTo(2.5 * 3.0);
-    expect(roomArea(room("ff-bedroom-2"))).toBeCloseTo(5.5 * 3.0);
     expect(roomArea(room("ff-sitting"))).toBeCloseTo(3.5 * 3.0);
   });
 
-  it("stacks the stair, toilets and Bedroom 1 on both floors", () => {
-    for (const [a, b] of [
-      ["gf-stair", "ff-stair"],
-      ["gf-attached-toilet", "ff-attached-toilet"],
-      ["gf-bedroom-1", "ff-bedroom-1"],
-    ]) {
-      expect(room(a).rects).toEqual(room(b).rects);
+  it("stacks the stair on both floors", () => {
+    expect(room("gf-stair").rects).toEqual(room("ff-stair").rects);
+  });
+
+  it("keeps every toilet on the west wet strip or over the kitchen", () => {
+    for (const id of ["gf-common-toilet", "gf-attached-toilet", "ff-attached-toilet"]) {
+      expect(room(id).rects.every((r) => r.x0 === 0 && r.x1 === 1.5)).toBe(true);
     }
+    const bath = room("ff-bathroom").rects[0];
+    const kitchen = room("gf-kitchen").rects[0];
+    expect(bath.x0 >= kitchen.x0 && bath.x1 <= kitchen.x1 && bath.z0 >= kitchen.z0 && bath.z1 <= kitchen.z1).toBe(true);
   });
 });
 
 describe("double-height void", () => {
   const slab = HOUSE.slabs.find((s) => s.id === "first-floor")!;
 
-  it("has no first-floor slab over the living room (except the landing nib)", () => {
+  it("has no first-floor slab over the void", () => {
     const voidRoom = room("ff-void");
     const slabOverVoid = voidRoom.rects.reduce((sum, r) => {
       // Sample a 10 cm grid inside the void and count slab coverage.
@@ -84,6 +87,11 @@ describe("double-height void", () => {
     }
     return inside;
   }
+
+  it("first-floor Bedroom 2 is 5.5 × 4.0 m including its bathroom (owner revision)", () => {
+    expect(roomArea(room("ff-bedroom-2")) + roomArea(room("ff-bathroom"))).toBeCloseTo(5.5 * 4.0);
+    expect(roomArea(room("ff-void"))).toBeCloseTo(5.5 * 4.5 - 1.0 * 2.5);
+  });
 
   it("living room reports double height", () => {
     expect(summarizeRoom(room("gf-living")).height).toBeCloseTo(6.2);
@@ -115,7 +123,7 @@ describe("geometry helpers", () => {
   });
 
   it("clear area is smaller than grid area by a plausible wall allowance", () => {
-    for (const r of HOUSE.rooms.filter((x) => x.kind !== "void")) {
+    for (const r of HOUSE.rooms.filter((x) => x.kind !== "void" && x.kind !== "balcony")) {
       const ratio = clearArea(r) / roomArea(r);
       expect(ratio).toBeGreaterThan(0.6);
       expect(ratio).toBeLessThan(1);
