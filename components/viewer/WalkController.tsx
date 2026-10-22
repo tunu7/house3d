@@ -37,7 +37,8 @@ export function WalkController() {
   const eyeFeet = useRef(WALK_START.feet);
   const look = useRef({ yaw: WALK_START.yaw, pitch: 0 });
   const keys = useRef(new Set<string>());
-  const roomCheck = useRef(0);
+  /** Seconds since the room readout was last refreshed; starts due so the first frame reports. */
+  const roomCheck = useRef(Infinity);
 
   // Camera setup and restore.
   useEffect(() => {
@@ -134,8 +135,8 @@ export function WalkController() {
     camera.position.set(cx, eyeFeet.current + EYE_HEIGHT, cz);
     camera.rotation.set(pitch, yaw, 0, "YXZ");
 
-    // Report the current room a few times a second, only when it changes.
-    roomCheck.current += delta;
+    // Report the current room a few times a second (real time), only when it changes.
+    roomCheck.current += rawDelta;
     if (roomCheck.current > 0.25) {
       roomCheck.current = 0;
       const room = findRoomAt(collisionFloor(pos.current.feet), pos.current.x, pos.current.z);

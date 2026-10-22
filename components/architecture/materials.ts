@@ -6,9 +6,10 @@ import * as THREE from "three";
  */
 export const MATERIALS = {
   // Warm cream render, as in the owner's reference photo (R9).
-  exteriorWall: new THREE.MeshStandardMaterial({ color: "#eee5d6", roughness: 0.9 }),
+  exteriorWall: new THREE.MeshStandardMaterial({ color: "#e8dcc8", roughness: 0.9 }),
   interiorWall: new THREE.MeshStandardMaterial({ color: "#e6e1d8", roughness: 0.95 }),
-  slab: new THREE.MeshStandardMaterial({ color: "#bdb8ae", roughness: 0.85 }),
+  // Slabs read as white ceilings from inside.
+  slab: new THREE.MeshStandardMaterial({ color: "#e8e4dc", roughness: 0.9 }),
   plinth: new THREE.MeshStandardMaterial({ color: "#5d5b57", roughness: 0.9 }),
   roof: new THREE.MeshStandardMaterial({ color: "#d4d0c8", roughness: 0.9 }),
   ground: new THREE.MeshStandardMaterial({ color: "#7d9c5b", roughness: 1 }),
@@ -23,18 +24,22 @@ export const MATERIALS = {
   /** Warm light sources: downlights, sconces, step strips, bollard heads. */
   glow: new THREE.MeshStandardMaterial({ color: "#fff1d6", emissive: "#ffc56b", emissiveIntensity: 1.6, roughness: 0.4 }),
   /** Window frames, railings and handrails: charcoal powder-coated aluminium. */
-  frame: new THREE.MeshStandardMaterial({ color: "#3a3a38", roughness: 0.45, metalness: 0.4 }),
+  frame: new THREE.MeshStandardMaterial({ color: "#2f2f2e", roughness: 0.35, metalness: 0.6 }),
   /** Interior door frames and leaves. */
   doorWood: new THREE.MeshStandardMaterial({ color: "#b8956a", roughness: 0.65 }),
   entranceDoor: new THREE.MeshStandardMaterial({ color: "#5b3d27", roughness: 0.55 }),
   stairTread: new THREE.MeshStandardMaterial({ color: "#d6d1c7", roughness: 0.7 }),
-  /** Cheap glazing: transparent standard material, no transmission pass. */
+  /**
+   * Glazing: transparent with strong environment reflections instead of a
+   * costly transmission pass, so windows mirror the sky at grazing angles.
+   */
   glass: new THREE.MeshStandardMaterial({
-    color: "#b9d2dc",
-    roughness: 0.05,
-    metalness: 0.1,
+    color: "#c6d8e0",
+    roughness: 0.03,
+    metalness: 0.15,
+    envMapIntensity: 2.2,
     transparent: true,
-    opacity: 0.28,
+    opacity: 0.32,
     depthWrite: false,
     side: THREE.DoubleSide,
   }),

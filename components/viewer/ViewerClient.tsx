@@ -23,6 +23,15 @@ const HouseViewer = dynamic(() => import("./HouseViewer"), {
   loading: () => <LoadingScreen />,
 });
 
+/** `?ui=0` hides every control (clean renders for the gallery). */
+function useControlsVisible(): boolean {
+  return useSyncExternalStore(
+    () => () => {},
+    () => new URLSearchParams(window.location.search).get("ui") !== "0",
+    () => true,
+  );
+}
+
 let webglSupport: boolean | undefined;
 /** WebGL support, probed once on the client; `null` during SSR/hydration. */
 function useWebGLSupport(): boolean | null {
@@ -106,6 +115,7 @@ export function ViewerClient() {
   const webgl = useWebGLSupport();
   const walkMode = useViewerStore((s) => s.walkMode);
   const contextLost = useViewerStore((s) => s.contextLost);
+  const controls = useControlsVisible();
 
   if (webgl === null) return <LoadingScreen />;
   if (!webgl) return <WebGLFallback />;
@@ -120,7 +130,7 @@ export function ViewerClient() {
       </ViewerErrorBoundary>
       {contextLost && <ContextLostMessage />}
 
-      <div className="pointer-events-none absolute inset-0 flex flex-col gap-3 p-3">
+      <div className={`pointer-events-none absolute inset-0 flex-col gap-3 p-3 ${controls ? "flex" : "hidden"}`}>
         {walkMode ? (
           <WalkHud />
         ) : (

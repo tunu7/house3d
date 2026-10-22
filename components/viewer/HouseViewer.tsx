@@ -12,8 +12,9 @@ const FLOOR_PARAMS: FloorId[] = ["ground", "first"];
 const LAYER_PARAMS: LayerKey[] = ["roof", "walls", "furniture"];
 
 /**
- * Applies `?hide=roof,first,...&exploded=1` to the initial viewer state, so
- * specific views can be linked to and checked without the full UI.
+ * Applies URL parameters to the initial viewer state — `?hide=roof,first,...`,
+ * `?exploded=1`, `?time=dusk`, `?room=<id>`, `?walk=1` — so specific views can
+ * be linked to and checked without the full UI.
  */
 function useUrlViewState() {
   useEffect(() => {
@@ -23,6 +24,12 @@ function useUrlViewState() {
     FLOOR_PARAMS.forEach((f) => hidden.has(f) && floors[f] && toggleFloor(f));
     LAYER_PARAMS.forEach((l) => hidden.has(l) && layers[l] && toggleLayer(l));
     if (params.get("exploded") === "1") setExploded(true);
+    if (params.get("time") === "dusk") useViewerStore.getState().setTimeOfDay("dusk");
+    // Deep links from the property page: focus a room, or start the walkthrough.
+    const room = params.get("room");
+    if (room) useViewerStore.getState().selectRoom(room);
+    if (params.get("walk") === "1") useViewerStore.getState().setWalkMode(true);
+    if (params.get("cutaway") === "1") useViewerStore.getState().setCutaway(true);
   }, []);
 }
 
@@ -37,10 +44,15 @@ function vecParam(key: string, fallback: Vec3): Vec3 {
   return parts?.length === 3 && parts.every(Number.isFinite) ? (parts as Vec3) : fallback;
 }
 
+/** `?fx=0` disables post-processing (useful for comparisons and automated checks). */
+const noFx = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("fx") === "0";
+
 export default function HouseViewer() {
   useUrlViewState();
   const [quality] = useState(initialQuality);
   const [dpr, setDpr] = useState(quality.dpr[1]);
+  // Post-processing is the first thing dropped if the frame rate falls.
+  const [effects, setEffects] = useState(quality.postprocessing);
   // Render on demand (only when something changes) except in the walkthrough,
   // where keyboard movement needs a continuous loop.
   const walkMode = useViewerStore((s) => s.walkMode);
@@ -49,7 +61,7 @@ export default function HouseViewer() {
       shadows="percentage"
       frameloop={walkMode ? "always" : "demand"}
       dpr={dpr}
-      camera={{ position: vecParam("cam", DEFAULT_CAMERA), fov: 40, near: 0.1, far: 200 }}
+      camera={{ position: vecParam("cam", DEFAULT_CAMERA), fov: 40, near: 0.1, far: 400 }}
       gl={{ antialias: quality.antialias, preserveDrawingBuffer: false, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {
         const canvas = gl.domElement;
@@ -61,12 +73,18 @@ export default function HouseViewer() {
         canvas.addEventListener("webglcontextrestored", () => useViewerStore.getState().setContextLost(false));
       }}
     >
-      {/* Step the pixel ratio down if the frame rate drops, back up if it recovers. */}
+      {/* On a sustained frame-rate drop: lower the pixel ratio and drop post-processing; restore on recovery. */}
       <PerformanceMonitor
-        onDecline={() => setDpr(quality.dpr[0])}
-        onIncline={() => setDpr(quality.dpr[1])}
+        onDecline={() => {
+          setDpr(quality.dpr[0]);
+          setEffects(false);
+        }}
+        onIncline={() => {
+          setDpr(quality.dpr[1]);
+          setEffects(quality.postprocessing);
+        }}
       />
-      <HouseScene target={vecParam("target", DEFAULT_TARGET)} shadowMapSize={quality.shadowMapSize} />
+      <HouseScene target={vecParam("target", DEFAULT_TARGET)} quality={quality} effects={effects && !noFx} />
     </Canvas>
   );
 }

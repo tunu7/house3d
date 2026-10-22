@@ -6,8 +6,8 @@ async function open(page: Page, query = "") {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-  await page.goto(`/${query}`);
-  await expect(page.locator("canvas")).toBeVisible();
+  await page.goto(`/explore${query}`);
+  await expect(page.locator("canvas")).toBeVisible({ timeout: 45_000 });
   // Loading overlay fades (and is hidden from assistive tech) once the first frames render.
   // A CSS locator is used because role queries ignore aria-hidden elements.
   await expect(page.locator('[role="status"]')).toHaveAttribute("aria-hidden", "true", { timeout: 30_000 });

@@ -15,6 +15,25 @@ interface Batch {
 const KEEP = ["position", "normal", "uv"];
 
 /**
+ * Box-projected UVs in metres: each face takes the two world axes it lies
+ * along, so textures keep true scale and line up across baked pieces.
+ */
+function worldUVs(geometry: THREE.BufferGeometry) {
+  const pos = geometry.getAttribute("position");
+  const nrm = geometry.getAttribute("normal");
+  const uv = geometry.getAttribute("uv");
+  for (let i = 0; i < pos.count; i++) {
+    const ax = Math.abs(nrm.getX(i));
+    const ay = Math.abs(nrm.getY(i));
+    const az = Math.abs(nrm.getZ(i));
+    const [u, v] =
+      ay >= ax && ay >= az ? [pos.getX(i), pos.getZ(i)] : ax >= az ? [pos.getZ(i), pos.getY(i)] : [pos.getX(i), pos.getY(i)];
+    uv.setXY(i, u, v);
+  }
+  uv.needsUpdate = true;
+}
+
+/**
  * Renders `children` once, then bakes every mesh inside into one geometry per
  * material (and shadow setting) and swaps the originals out. For static
  * content built from many small primitives (furniture, partitions) this turns
@@ -54,6 +73,7 @@ export function MergeStatic({ children }: { children: ReactNode }) {
     for (const [key, g] of groups) {
       const geometry = mergeGeometries(g.parts);
       g.parts.forEach((p) => p.dispose());
+      if (geometry) worldUVs(geometry);
       if (geometry) merged.push({ key, geometry, material: g.material, castShadow: g.cast, receiveShadow: g.receive });
     }
     setBatches(merged);

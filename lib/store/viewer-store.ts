@@ -12,6 +12,7 @@ import type { FloorId } from "@/types/architecture";
 
 export type LayerKey = "roof" | "walls" | "furniture";
 export type ViewMode = "full" | "exterior" | "ground" | "first" | "cutaway";
+export type TimeOfDay = "day" | "dusk";
 
 /** A camera move for CameraController to animate; `seq` makes repeat requests distinct. */
 export interface CameraRequest extends CameraPose {
@@ -35,6 +36,8 @@ interface ViewerState {
   ready: boolean;
   /** The WebGL context was lost (GPU reset, too many contexts, etc.). */
   contextLost: boolean;
+  /** Lighting preset: daylight, or dusk with interior and facade lights on. */
+  timeOfDay: TimeOfDay;
 
   setViewMode: (mode: ViewMode) => void;
   toggleFloor: (floor: FloorId) => void;
@@ -50,6 +53,7 @@ interface ViewerState {
   setWalkRoom: (roomId: string | null) => void;
   setReady: () => void;
   setContextLost: (lost: boolean) => void;
+  setTimeOfDay: (time: TimeOfDay) => void;
 }
 
 type ModeState = Pick<ViewerState, "floors" | "layers" | "cutaway">;
@@ -83,6 +87,7 @@ export const useViewerStore = create<ViewerState>()((set, get) => ({
   walkRoomId: null,
   ready: false,
   contextLost: false,
+  timeOfDay: "day",
 
   setViewMode: (mode) =>
     set((s) => ({
@@ -153,4 +158,5 @@ export const useViewerStore = create<ViewerState>()((set, get) => ({
   setWalkRoom: (walkRoomId) => set({ walkRoomId }),
   setReady: () => set({ ready: true }),
   setContextLost: (contextLost) => set({ contextLost }),
+  setTimeOfDay: (timeOfDay) => set({ timeOfDay }),
 }));

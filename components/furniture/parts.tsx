@@ -14,12 +14,12 @@ export const FURN = {
   linen: new THREE.MeshStandardMaterial({ color: "#f4f1ea", roughness: 0.9 }),
   rug: new THREE.MeshStandardMaterial({ color: "#b8a68a", roughness: 1 }),
   ceramic: new THREE.MeshStandardMaterial({ color: "#fbfbf9", roughness: 0.2 }),
-  // Low metalness: there is no environment map, so fully metallic surfaces would render black.
-  steel: new THREE.MeshStandardMaterial({ color: "#c9cccc", roughness: 0.35, metalness: 0.25 }),
+  // Brushed steel: relies on the scene environment map for its reflections.
+  steel: new THREE.MeshStandardMaterial({ color: "#d4d7d8", roughness: 0.3, metalness: 0.85 }),
   dark: new THREE.MeshStandardMaterial({ color: "#2b2b2a", roughness: 0.5 }),
   stone: new THREE.MeshStandardMaterial({ color: "#4a4744", roughness: 0.35 }),
   hobGlass: new THREE.MeshStandardMaterial({ color: "#111111", roughness: 0.1, metalness: 0.3 }),
-  mirror: new THREE.MeshStandardMaterial({ color: "#c8d3d8", roughness: 0.08, metalness: 0.3 }),
+  mirror: new THREE.MeshStandardMaterial({ color: "#e4ecef", roughness: 0.02, metalness: 0.95 }),
   leaf: new THREE.MeshStandardMaterial({ color: "#5d7a45", roughness: 0.9 }),
   pot: new THREE.MeshStandardMaterial({ color: "#8a8178", roughness: 0.8 }),
   lampShade: new THREE.MeshStandardMaterial({ color: "#f3e9d6", emissive: "#f3d9a4", emissiveIntensity: 0.25, roughness: 0.9 }),

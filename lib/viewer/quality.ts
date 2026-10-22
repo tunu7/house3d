@@ -3,10 +3,16 @@ export interface Quality {
   dpr: [number, number];
   shadowMapSize: number;
   antialias: boolean;
+  /** Ambient occlusion, bloom and filmic tone mapping. */
+  postprocessing: boolean;
+  /** Dusk lamps: every room, or only the main living spaces. */
+  lamps: "all" | "key";
+  /** Environment (reflection) map resolution. */
+  envResolution: number;
 }
 
-const HIGH: Quality = { dpr: [1, 2], shadowMapSize: 2048, antialias: true };
-const LOW: Quality = { dpr: [1, 1.5], shadowMapSize: 1024, antialias: true };
+const HIGH: Quality = { dpr: [1, 2], shadowMapSize: 2048, antialias: true, postprocessing: true, lamps: "all", envResolution: 256 };
+const LOW: Quality = { dpr: [1, 1.5], shadowMapSize: 1024, antialias: true, postprocessing: false, lamps: "key", envResolution: 128 };
 
 /**
  * Starting render quality: phones and tablets (coarse pointer or narrow

@@ -1,6 +1,7 @@
 "use client";
 
 import { Furniture } from "@/components/furniture/Furniture";
+import { InteriorLamps } from "@/components/viewer/Lamps";
 import { RoomHighlight } from "@/components/viewer/RoomHighlight";
 import { useViewerStore } from "@/lib/store/viewer-store";
 import { EXPLODE_OFFSET } from "@/lib/viewer/constants";
@@ -13,7 +14,7 @@ import { Roof } from "./Roof";
 import { RoomFloors } from "./RoomFloors";
 import { Staircase } from "./Staircase";
 
-function Floor({ floor }: { floor: FloorId }) {
+function Floor({ floor, lampsAll }: { floor: FloorId; lampsAll: boolean }) {
   const visible = useViewerStore((s) => s.floors[floor]);
   const showWalls = useViewerStore((s) => s.layers.walls);
   const showFurniture = useViewerStore((s) => s.layers.furniture);
@@ -32,11 +33,12 @@ function Floor({ floor }: { floor: FloorId }) {
       {/* The stair rises from the ground floor; first-floor guards edge the void and stair well. */}
       {floor === "ground" ? <Staircase /> : <Railings floor={floor} />}
       <RoomHighlight floor={floor} />
+      <InteriorLamps floor={floor} all={lampsAll} />
     </group>
   );
 }
 
-export function HouseShell() {
+export function HouseShell({ lampsAll }: { lampsAll: boolean }) {
   const exploded = useViewerStore((s) => s.exploded);
   const showRoof = useViewerStore((s) => s.layers.roof);
   const firstVisible = useViewerStore((s) => s.floors.first);
@@ -44,9 +46,9 @@ export function HouseShell() {
 
   return (
     <group>
-      <Floor floor="ground" />
+      <Floor floor="ground" lampsAll={lampsAll} />
       <group position-y={lift}>
-        <Floor floor="first" />
+        <Floor floor="first" lampsAll={lampsAll} />
         {showRoof && firstVisible && (
           <group position-y={lift} userData={{ floor: "first" }}>
             <Roof />

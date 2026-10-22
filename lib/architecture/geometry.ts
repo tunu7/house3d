@@ -194,11 +194,18 @@ export function paneBox(wall: Wall, o: Opening, baseY: number, frameWidth: numbe
 }
 
 /**
- * Two-panel sliding grille in a door opening: both panels parked over the
- * `from` half on adjacent tracks (one slid behind the other), leaving the
- * other half of the doorway open. Each panel is a frame with vertical bars.
+ * Two-panel sliding door in an opening: both panels parked over the `from`
+ * half on adjacent tracks (one slid behind the other), leaving the other half
+ * of the doorway open. Grille panels are a frame with vertical bars; glass
+ * panels are a slim frame around a pane (returned separately as `glass`).
  */
-export function slidingGrillePieces(wall: Wall, o: Opening, baseY: number, frameWidth: number): BoxPiece[] {
+export function slidingPanelPieces(
+  wall: Wall,
+  o: Opening,
+  baseY: number,
+  frameWidth: number,
+): { metal: BoxPiece[]; glass: BoxPiece[] } {
+  const isGlass = o.panel === "glass";
   const stile = 0.04;
   const rail = 0.05;
   const bar = 0.016;
@@ -210,24 +217,29 @@ export function slidingGrillePieces(wall: Wall, o: Opening, baseY: number, frame
   const a0 = o.from + frameWidth;
   const h0 = 0.01;
   const h1 = o.head - frameWidth;
-  const pieces: BoxPiece[] = [];
+  const metal: BoxPiece[] = [];
+  const glass: BoxPiece[] = [];
   for (const offset of [-track, track]) {
     const a1 = a0 + panelW;
-    pieces.push(
+    metal.push(
       wallBox(wall, baseY, a0, a0 + stile, h0, h1, depth, offset),
       wallBox(wall, baseY, a1 - stile, a1, h0, h1, depth, offset),
       wallBox(wall, baseY, a0 + stile, a1 - stile, h0, h0 + rail, depth, offset),
       wallBox(wall, baseY, a0 + stile, a1 - stile, h1 - rail, h1, depth, offset),
-      wallBox(wall, baseY, a0 + stile, a1 - stile, (h0 + h1) / 2 - rail / 2, (h0 + h1) / 2 + rail / 2, depth, offset),
     );
+    if (isGlass) {
+      glass.push(wallBox(wall, baseY, a0 + stile, a1 - stile, h0 + rail, h1 - rail, 0.012, offset));
+      continue;
+    }
+    metal.push(wallBox(wall, baseY, a0 + stile, a1 - stile, (h0 + h1) / 2 - rail / 2, (h0 + h1) / 2 + rail / 2, depth, offset));
     const inner = panelW - 2 * stile;
     const bars = Math.floor(inner / barSpacing);
     for (let i = 1; i <= bars; i++) {
       const c = a0 + stile + (inner * i) / (bars + 1);
-      pieces.push(wallBox(wall, baseY, c - bar / 2, c + bar / 2, h0 + rail, h1 - rail, bar, offset));
+      metal.push(wallBox(wall, baseY, c - bar / 2, c + bar / 2, h0 + rail, h1 - rail, bar, offset));
     }
   }
-  return pieces;
+  return { metal, glass };
 }
 
 export interface LeafPlacement {
