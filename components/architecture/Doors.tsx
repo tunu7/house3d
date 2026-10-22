@@ -26,17 +26,44 @@ export function WallDoors({ wall, baseY }: { wall: Wall; baseY: number }) {
     };
   }, [wall, baseY]);
 
-  const leafMaterial = wall.kind === "exterior" ? MATERIALS.entranceDoor : MATERIALS.doorWood;
+  const entrance = wall.kind === "exterior";
+  const leafMaterial = entrance ? MATERIALS.entranceDoor : MATERIALS.doorWood;
   return (
     <>
       <MergedBoxes pieces={frames} material={MATERIALS.doorWood} />
       <MergedBoxes pieces={slidingMetal} material={MATERIALS.frame} />
       <MergedBoxes pieces={slidingGlass} material={MATERIALS.glass} castShadow={false} receiveShadow={false} />
-      {leaves.map((l) => (
-        <mesh key={l.id} position={l.center} rotation-y={l.rotationY} material={leafMaterial} castShadow receiveShadow>
-          <boxGeometry args={l.size} />
-        </mesh>
-      ))}
+      {leaves.map((l) => {
+        const [w, , t] = l.size;
+        // Hardware near the leaf's free edge, at 1.0 m (lever) or centred on 1.1 m (pull bar).
+        const hx = w / 2 - 0.08;
+        const hy = baseY + (entrance ? 1.1 : 1.0) - l.center[1];
+        return (
+          <group key={l.id} position={l.center} rotation-y={l.rotationY}>
+            <mesh material={leafMaterial} castShadow receiveShadow>
+              <boxGeometry args={l.size} />
+            </mesh>
+            {[-1, 1].map((side) => (
+              <group key={side} position={[hx, hy, side * (t / 2 + 0.03)]}>
+                {entrance ? (
+                  <mesh material={MATERIALS.frame}>
+                    <boxGeometry args={[0.025, 0.9, 0.025]} />
+                  </mesh>
+                ) : (
+                  <>
+                    <mesh position-x={-0.05} material={MATERIALS.handle}>
+                      <boxGeometry args={[0.12, 0.018, 0.018]} />
+                    </mesh>
+                    <mesh position-z={-side * 0.015} rotation-x={Math.PI / 2} material={MATERIALS.handle}>
+                      <cylinderGeometry args={[0.028, 0.028, 0.012, 16]} />
+                    </mesh>
+                  </>
+                )}
+              </group>
+            ))}
+          </group>
+        );
+      })}
     </>
   );
 }

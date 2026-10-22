@@ -1,5 +1,6 @@
 "use client";
 
+import { RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import { MATERIALS } from "@/components/architecture/materials";
 
@@ -8,8 +9,13 @@ export const FURN = {
   oak: new THREE.MeshStandardMaterial({ color: "#a47a4f", roughness: 0.6 }),
   walnut: new THREE.MeshStandardMaterial({ color: "#5e4130", roughness: 0.55 }),
   lacquer: new THREE.MeshStandardMaterial({ color: "#f1ede6", roughness: 0.4 }),
-  fabric: new THREE.MeshStandardMaterial({ color: "#d9d2c5", roughness: 0.95 }),
-  fabricDark: new THREE.MeshStandardMaterial({ color: "#b9b1a3", roughness: 0.95 }),
+  fabric: new THREE.MeshStandardMaterial({ color: "#d6cdbd", roughness: 0.95 }),
+  fabricDark: new THREE.MeshStandardMaterial({ color: "#a89e8e", roughness: 0.95 }),
+  /** Accent cushions and throws. */
+  terracotta: new THREE.MeshStandardMaterial({ color: "#b8673a", roughness: 0.9 }),
+  ochre: new THREE.MeshStandardMaterial({ color: "#c79a4a", roughness: 0.9 }),
+  /** Brass for lamp stems and frames. */
+  brass: new THREE.MeshStandardMaterial({ color: "#b8955a", roughness: 0.35, metalness: 0.8 }),
   sage: new THREE.MeshStandardMaterial({ color: "#7c8a63", roughness: 0.9 }),
   linen: new THREE.MeshStandardMaterial({ color: "#f4f1ea", roughness: 0.9 }),
   rug: new THREE.MeshStandardMaterial({ color: "#b8a68a", roughness: 1 }),
@@ -35,6 +41,12 @@ export function B({ p, s, m }: { p: V3; s: V3; m: THREE.Material }) {
       <boxGeometry args={s} />
     </mesh>
   );
+}
+
+/** Rounded box (upholstery, mattresses, cushions): soft edges catch light like real fabric. */
+export function RB({ p, s, m, r = 0.04 }: { p: V3; s: V3; m: THREE.Material; r?: number }) {
+  const radius = Math.min(r, s[0] / 2 - 0.001, s[1] / 2 - 0.001, s[2] / 2 - 0.001);
+  return <RoundedBox args={s} radius={radius} smoothness={3} position={p} material={m} castShadow receiveShadow />;
 }
 
 /** Vertical cylinder by base-centre position. */

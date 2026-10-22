@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { FIXTURES } from "@/lib/architecture/details";
 import { planToWorld } from "@/lib/architecture/geometry";
 import { HOUSE } from "@/lib/architecture/house";
 import { CANOPY, PORCH } from "@/lib/architecture/site";
@@ -9,38 +10,30 @@ import { ATMOSPHERES } from "@/lib/viewer/atmosphere";
 import type { FloorId } from "@/types/architecture";
 
 const WARM = "#ffc98a";
-/** Rooms lit on every device; the rest only at high quality. */
-const KEY_ROOMS = new Set(["gf-living", "gf-dining", "ff-sitting", "ff-bedroom-2"]);
-const LIT_KINDS = new Set(["bedroom", "living", "dining", "kitchen", "sitting", "circulation"]);
+/** Fittings lit on every device; the rest only at high quality. */
+const KEY_FIXTURES = new Set(["dining-pendant", "living-globe-0", "living-globe-1", "ff-sitting-light", "ff-bedroom-2-light"]);
 
 /**
- * Warm interior lamps for dusk: one ceiling light per habitable room (two in
- * the double-height living room), no shadows. Mounted only when lamps are on,
- * inside each floor's group so they follow visibility and exploded view.
+ * Warm interior light at dusk, emitted from the visible fittings (see
+ * lib/architecture/details FIXTURES), without shadows. Mounted only when
+ * lamps are on, inside each floor's group so they follow visibility and
+ * exploded view.
  */
 export function InteriorLamps({ floor, all }: { floor: FloorId; all: boolean }) {
   const on = useViewerStore((s) => ATMOSPHERES[s.timeOfDay].lampsOn);
   const lamps = useMemo(() => {
     const ffl = HOUSE.levels[floor].ffl;
-    return HOUSE.rooms
-      .filter((r) => r.floor === floor && LIT_KINDS.has(r.kind) && (all || KEY_ROOMS.has(r.id)))
-      .flatMap((room) => {
-        const r = room.rects.reduce((a, b) => ((a.x1 - a.x0) * (a.z1 - a.z0) >= (b.x1 - b.x0) * (b.z1 - b.z0) ? a : b));
-        const cx = (r.x0 + r.x1) / 2;
-        const cz = (r.z0 + r.z1) / 2;
-        const points = room.kind === "living" ? [[cx, cz - 1.2], [cx, cz + 1.2]] : [[cx, cz]];
-        return points.map(([x, z], i) => {
-          const [wx, wz] = planToWorld(x, z);
-          return { key: `${room.id}-${i}`, position: [wx, ffl + 2.55, wz] as [number, number, number], intensity: room.kind === "living" ? 9 : 5 };
-        });
-      });
+    return FIXTURES.filter((f) => f.floor === floor && (all || KEY_FIXTURES.has(f.id))).map((f) => {
+      const [x, z] = planToWorld(f.x, f.z);
+      return { key: f.id, position: [x, ffl + f.y - 0.15, z] as [number, number, number], intensity: f.intensity, distance: f.kind === "pendant" ? 9 : 6 };
+    });
   }, [floor, all]);
 
   if (!on) return null;
   return (
     <>
       {lamps.map((l) => (
-        <pointLight key={l.key} position={l.position} color={WARM} intensity={l.intensity} distance={7} decay={2} />
+        <pointLight key={l.key} position={l.position} color={WARM} intensity={l.intensity} distance={l.distance} decay={2} />
       ))}
     </>
   );

@@ -19,6 +19,22 @@ export const MATERIALS = {
   fascia: new THREE.MeshStandardMaterial({ color: "#3f3f3d", roughness: 0.6 }),
   /** White eaves and slab edges. */
   eave: new THREE.MeshStandardMaterial({ color: "#f6f3ee", roughness: 0.8 }),
+  /** Brushed stainless door levers. */
+  handle: new THREE.MeshStandardMaterial({ color: "#c8c9c7", roughness: 0.3, metalness: 0.9 }),
+  /** Painted timber skirting. */
+  skirting: new THREE.MeshStandardMaterial({ color: "#f1ede6", roughness: 0.45 }),
+  /** Rainwater pipes. */
+  pipe: new THREE.MeshStandardMaterial({ color: "#4a4a48", roughness: 0.5, metalness: 0.3 }),
+  /** Lamp diffusers: softly lit by day, bright at dusk (set by the lighting preset). */
+  bulb: new THREE.MeshStandardMaterial({ color: "#fffaf0", emissive: "#ffd8a0", emissiveIntensity: 0.15, roughness: 0.3 }),
+  /** Sheer curtains. */
+  sheer: new THREE.MeshStandardMaterial({
+    color: "#f6f1e8",
+    roughness: 1,
+    transparent: true,
+    opacity: 0.82,
+    side: THREE.DoubleSide,
+  }),
   /** Planting on the facade and in planters. */
   leaf: new THREE.MeshStandardMaterial({ color: "#4f7a3a", roughness: 0.9 }),
   /** Warm light sources: downlights, sconces, step strips, bollard heads. */

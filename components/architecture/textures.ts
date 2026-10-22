@@ -236,7 +236,7 @@ function cladding(ctx: CanvasRenderingContext2D, rand: () => number) {
   }
 }
 
-export type FloorFinish = "wood" | "marble" | "kitchenTile" | "bathTile";
+export type FloorFinish = "wood" | "marble" | "kitchenTile" | "bathTile" | "splashTile";
 export type FacadeFinish = "stone" | "cladding";
 export type SurfaceFinish = "exteriorPlaster" | "interiorPlaster" | "concrete" | "grass";
 
@@ -251,6 +251,8 @@ export function floorMaterials(): Record<FloorFinish, THREE.MeshStandardMaterial
     marble: new THREE.MeshStandardMaterial({ ...surface(tiles("#ece6dc", 2, "#cfc8bc", 0.03, true), 23, 1.6, 4), roughness: 0.22 }),
     kitchenTile: new THREE.MeshStandardMaterial({ ...surface(tiles("#d8d0c4", 2, "#a9a196", 0.05), 37, 1.2, 4), roughness: 0.45 }),
     bathTile: new THREE.MeshStandardMaterial({ ...surface(tiles("#c9ced1", 3, "#9ea4a8", 0.05), 41, 0.9, 4), roughness: 0.35 }),
+    // Small glazed wall tiles (10 cm) for the kitchen backsplash.
+    splashTile: new THREE.MeshStandardMaterial({ ...surface(tiles("#efe8dc", 6, "#cfc6b8", 0.06), 43, 0.6, 4), roughness: 0.15 }),
   };
   return floorCache;
 }

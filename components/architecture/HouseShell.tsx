@@ -6,6 +6,7 @@ import { RoomHighlight } from "@/components/viewer/RoomHighlight";
 import { useViewerStore } from "@/lib/store/viewer-store";
 import { EXPLODE_OFFSET } from "@/lib/viewer/constants";
 import type { FloorId } from "@/types/architecture";
+import { InteriorFinishes } from "./Details";
 import { ExteriorWalls } from "./ExteriorWalls";
 import { FloorSlab } from "./FloorSlabs";
 import { InteriorWalls } from "./InteriorWalls";
@@ -27,6 +28,7 @@ function Floor({ floor, lampsAll }: { floor: FloorId; lampsAll: boolean }) {
         <>
           <ExteriorWalls floor={floor} />
           <InteriorWalls floor={floor} />
+          <InteriorFinishes floor={floor} />
         </>
       )}
       {showFurniture && <Furniture floor={floor} />}

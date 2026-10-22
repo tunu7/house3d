@@ -9,7 +9,8 @@ import { Basin, Shower, WC } from "./BathroomFixtures";
 import { Bed, Nightstand, Wardrobe } from "./BedroomFurniture";
 import { Chair, Console, DiningTable } from "./DiningFurniture";
 import { BarTable, Counter, Fridge, Hood, Stool, UpperCabinet } from "./KitchenFurniture";
-import { CoffeeTable, Plant, RoundTable, Rug, Sofa } from "./LivingRoomFurniture";
+import { Art, CoffeeTable, FloorLamp, Plant, RoundTable, Rug, SideTable, Sofa } from "./LivingRoomFurniture";
+import { Curtains, LightFittings } from "./SoftFurnishings";
 
 /** Rotation about world Y that turns local +Z toward the item's plan facing. */
 const ROTATION: Record<Facing, number> = {
@@ -35,6 +36,9 @@ const RENDER: Record<FurnitureType, (f: FurnitureItem) => ReactElement> = {
   counter: (f) => <Counter w={f.w} d={f.d} sinkAt={f.sinkAt} hobAt={f.hobAt} />,
   barTable: (f) => <BarTable w={f.w} d={f.d} />,
   stool: (f) => <Stool w={f.w} d={f.d} />,
+  floorLamp: () => <FloorLamp />,
+  sideTable: (f) => <SideTable w={f.w} d={f.d} />,
+  art: (f) => <Art w={f.w} d={f.d} height={f.height} elevation={f.elevation} />,
   upperCabinet: (f) => <UpperCabinet w={f.w} d={f.d} elevation={f.elevation} height={f.height} />,
   hood: (f) => <Hood w={f.w} d={f.d} elevation={f.elevation} />,
   fridge: (f) => <Fridge w={f.w} d={f.d} />,
@@ -58,6 +62,8 @@ export function Furniture({ floor }: { floor: FloorId }) {
             </group>
           );
         })}
+      <Curtains floor={floor} />
+      <LightFittings floor={floor} />
     </MergeStatic>
   );
 }

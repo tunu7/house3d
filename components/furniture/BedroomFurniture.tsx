@@ -1,21 +1,26 @@
 "use client";
 
-import { B, Cyl, FURN, type PieceProps } from "./parts";
+import { B, Cyl, FURN, RB, type PieceProps } from "./parts";
 
-/** Bed with the headboard at the back (local −Z) and the foot toward the front. */
+/** Bed: timber base, deep mattress, upholstered headboard, duvet folded back, pillows and a throw. */
 export function Bed({ w, d }: PieceProps) {
-  const pillowW = w >= 1.4 ? w / 2 - 0.12 : w - 0.2;
-  const pillowXs = w >= 1.4 ? [-w / 4, w / 4] : [0];
+  const double = w >= 1.4;
+  const pillowW = double ? w / 2 - 0.1 : w - 0.2;
+  const pillowXs = double ? [-w / 4, w / 4] : [0];
   return (
     <group>
-      <B p={[0, 0.15, 0]} s={[w, 0.3, d]} m={FURN.oak} />
-      <B p={[0, 0.4, 0.04]} s={[w - 0.06, 0.2, d - 0.12]} m={FURN.linen} />
-      <B p={[0, 0.5, -d / 2 + 0.04]} s={[w + 0.06, 1.0, 0.08]} m={FURN.fabricDark} />
-      <B p={[0, 0.52, d * 0.16]} s={[w - 0.02, 0.05, d * 0.66]} m={FURN.fabric} />
-      <B p={[0, 0.55, d * 0.36]} s={[w + 0.01, 0.06, 0.4]} m={FURN.sage} />
+      <B p={[0, 0.14, 0.02]} s={[w, 0.24, d - 0.04]} m={FURN.oak} />
+      <B p={[0, 0.02, 0.02]} s={[w - 0.1, 0.04, d - 0.14]} m={FURN.dark} />
+      <RB p={[0, 0.36, 0.05]} s={[w - 0.04, 0.22, d - 0.12]} m={FURN.linen} r={0.06} />
+      <RB p={[0, 0.6, -d / 2 + 0.05]} s={[w + 0.12, 1.1, 0.1]} m={FURN.fabricDark} r={0.04} />
+      {/* Duvet over the lower two-thirds, draped over the sides. */}
+      <RB p={[0, 0.48, d * 0.14]} s={[w + 0.04, 0.06, d * 0.68]} m={FURN.fabric} r={0.03} />
+      <RB p={[0, 0.5, -d * 0.2]} s={[w + 0.04, 0.08, 0.16]} m={FURN.fabric} r={0.04} />
+      <RB p={[0, 0.52, d * 0.34]} s={[w + 0.06, 0.07, 0.42]} m={FURN.sage} r={0.03} />
       {pillowXs.map((x) => (
-        <B key={x} p={[x, 0.56, -d / 2 + 0.3]} s={[pillowW, 0.12, 0.36]} m={FURN.linen} />
+        <RB key={x} p={[x, 0.57, -d / 2 + 0.3]} s={[pillowW, 0.16, 0.38]} m={FURN.linen} r={0.07} />
       ))}
+      {double && <RB p={[0, 0.6, -d / 2 + 0.48]} s={[0.4, 0.26, 0.12]} m={FURN.terracotta} r={0.05} />}
     </group>
   );
 }

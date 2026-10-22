@@ -22,6 +22,8 @@ const GF_EXT_HEIGHT = D.floorToFloor;
 /** First-floor exterior walls rise through the roof slab to the parapet top. */
 const FF_EXT_HEIGHT = D.ceilingHeight + D.slabThickness + D.parapetHeight;
 const KITCHEN_SILL = 1.05;
+/** Clerestory sill for windows behind a bed headboard: light and air without a window at pillow height. */
+const CLERESTORY_SILL = 1.5;
 const VENT_SILL = 1.6;
 
 /**
@@ -97,12 +99,12 @@ const GROUND_WALLS: Wall[] = [
       win("gf-w-living-front", 5.6, 8.4),
     ],
     west: [
-      win("gf-w-bed2-side", 1.2, 2.4),
+      win("gf-w-bed2-side", 1.2, 2.4, CLERESTORY_SILL),
       opening("gf-v-common-toilet", "vent", 4.0, 4.6),
       opening("gf-v-bed1-toilet", "vent", 6.3, 6.9),
       win("gf-w-bed1-side", 7.9, 9.1),
     ],
-    backLeft: [win("gf-w-bed1-rear", 0.8, 2.6, 1.2)],
+    backLeft: [win("gf-w-bed1-rear", 0.8, 2.6, CLERESTORY_SILL)],
     step: [],
     rearRight: [
       // Owner revision R2: dining back door onto the rear open area.

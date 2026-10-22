@@ -49,6 +49,7 @@ export function Lighting({ shadowMapSize, envResolution }: { shadowMapSize: numb
 
   useEffect(() => {
     MATERIALS.glow.emissiveIntensity = a.glowIntensity;
+    MATERIALS.bulb.emissiveIntensity = a.lampsOn ? 4 : 0.15;
     // Used when post-processing (which owns tone mapping) is off.
     get().gl.toneMappingExposure = a.exposure;
     get().invalidate();

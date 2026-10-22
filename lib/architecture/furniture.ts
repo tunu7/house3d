@@ -29,6 +29,7 @@ export const FURNITURE: FurnitureItem[] = [
   ...place("ground", {
     // Bed against the back wall; wardrobe on the front wall, clear of both doors.
     "gf-bedroom-1": [
+      item("rug", 1.9, 8.5, 2.0, 1.8, "-z"),
       item("bed", 1.9, 8.77, 1.6, 2.0, "-z"),
       item("nightstand", 0.6, 9.55, 0.4, 0.4, "-z"),
       item("nightstand", 3.15, 9.55, 0.4, 0.4, "-z"),
@@ -51,6 +52,7 @@ export const FURNITURE: FurnitureItem[] = [
         item("chair", x, 7.75, 0.45, 0.45, "-z"),
       ]),
       item("console", 3.76, 7.6, 1.0, 0.4, "+x"),
+      item("art", 3.575, 7.6, 0.8, 0.03, "+x", { elevation: 1.3, height: 0.7 }),
       // Stools at the breakfast table that replaces the kitchen wall (R5).
       item("stool", 6.25, 6.1, 0.35, 0.35, "+x"),
       item("stool", 6.25, 6.8, 0.35, 0.35, "+x"),
@@ -66,6 +68,7 @@ export const FURNITURE: FurnitureItem[] = [
     ],
     // One nightstand only: the back-left corner is the way to the common toilet (R6).
     "gf-bedroom-2": [
+      item("rug", 1.3, 1.45, 1.8, 2.0, "+x"),
       item("bed", 1.23, 1.45, 1.5, 2.0, "+x"),
       item("nightstand", 0.43, 0.45, 0.4, 0.4, "+x"),
       item("wardrobe", 3.14, 0.9, 1.2, 0.6, "-x"),
@@ -77,6 +80,9 @@ export const FURNITURE: FurnitureItem[] = [
       item("coffeeTable", 6.5, 3.0, 1.1, 0.6, "-z"),
       item("armchair", 6.0, 1.5, 0.8, 0.8, "+z"),
       item("armchair", 7.0, 1.5, 0.8, 0.8, "+z"),
+      item("floorLamp", 8.15, 4.4, 0.4, 0.4, "-z"),
+      item("sideTable", 4.8, 4.3, 0.45, 0.45, "-z"),
+      item("art", 3.575, 1.0, 1.0, 0.03, "+x", { elevation: 1.25, height: 0.8 }),
       item("plant", 8.45, 0.55, 0.45, 0.45, "-z"),
       item("plant", 8.45, 5.15, 0.45, 0.45, "-z"),
     ],
@@ -84,7 +90,9 @@ export const FURNITURE: FurnitureItem[] = [
   ...place("first", {
     // Bed against the shared wall with Bedroom 2; wardrobe at the back.
     "ff-bedroom-1": [
+      item("rug", 2.2, 7.0, 1.8, 2.2, "-x"),
       item("bed", 2.44, 7.0, 1.6, 2.0, "-x"),
+      item("art", 3.425, 7.0, 1.0, 0.03, "-x", { elevation: 1.35, height: 0.7 }),
       item("nightstand", 3.24, 5.8, 0.4, 0.4, "-x"),
       item("wardrobe", 2.45, 9.47, 1.6, 0.6, "-z"),
     ],
@@ -98,6 +106,7 @@ export const FURNITURE: FurnitureItem[] = [
     "ff-bedroom-2": [
       item("rug", 5.0, 6.95, 2.4, 2.2, "-z"),
       item("bed", 4.61, 6.95, 1.8, 2.1, "+x"),
+      item("art", 3.575, 6.95, 1.2, 0.03, "+x", { elevation: 1.35, height: 0.7 }),
       item("nightstand", 3.76, 5.8, 0.4, 0.4, "+x"),
       item("nightstand", 3.76, 8.065, 0.4, 0.4, "+x"),
       item("wardrobe", 5.9, 4.86, 1.8, 0.6, "+z"),

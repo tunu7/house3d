@@ -7,6 +7,7 @@ import { exteriorNormal, planToWorld } from "@/lib/architecture/geometry";
 import { HOUSE } from "@/lib/architecture/house";
 import { useViewerStore } from "@/lib/store/viewer-store";
 import type { FloorId } from "@/types/architecture";
+import { ExteriorWallDetails } from "./Details";
 import { WALL_DECOR } from "./Facade";
 import { WallAssembly } from "./WallAssembly";
 
@@ -51,6 +52,7 @@ export function ExteriorWalls({ floor }: { floor: FloorId }) {
             refs.current[i] = g;
           }}
         >
+          <ExteriorWallDetails wall={w} />
           {WALL_DECOR[w.id]?.()}
         </WallAssembly>
       ))}

@@ -2,7 +2,9 @@
 
 import { useMemo } from "react";
 import * as THREE from "three";
+import { DOWNPIPES } from "@/lib/architecture/details";
 import { planToWorld } from "@/lib/architecture/geometry";
+import { ROOF_TOP } from "@/lib/architecture/dimensions";
 import {
   BOLLARDS,
   GROUND_LEVEL,
@@ -88,6 +90,22 @@ function Planter({ rect, height, seed, tree }: { rect: PlanRect; height: number;
   );
 }
 
+/** Rainwater downpipe from the parapet hopper to a ground shoe. */
+function Downpipe({ x, z }: { x: number; z: number }) {
+  const [wx, wz] = planToWorld(x, z);
+  const top = ROOF_TOP + 0.3;
+  return (
+    <group position={[wx, 0, wz]}>
+      <mesh position-y={(GROUND_LEVEL + top) / 2} material={MATERIALS.pipe} castShadow>
+        <cylinderGeometry args={[0.05, 0.05, top - GROUND_LEVEL, 12]} />
+      </mesh>
+      <mesh position-y={top + 0.08} material={MATERIALS.pipe} castShadow>
+        <boxGeometry args={[0.22, 0.18, 0.16]} />
+      </mesh>
+    </group>
+  );
+}
+
 /** Bollard: charcoal post with a glowing head. */
 function Bollard({ x, z }: { x: number; z: number }) {
   const r = (s: number): PlanRect => ({ x0: x - s, x1: x + s, z0: z - s, z1: z + s });
@@ -143,6 +161,9 @@ export function Site() {
         ))}
         {BOLLARDS.map((b, i) => (
           <Bollard key={i} x={b.x} z={b.z} />
+        ))}
+        {DOWNPIPES.map((p, i) => (
+          <Downpipe key={`pipe${i}`} x={p.x} z={p.z} />
         ))}
       </MergeStatic>
     </group>
