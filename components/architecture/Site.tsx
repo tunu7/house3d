@@ -15,13 +15,17 @@ import {
   STEP_TREADS,
   STEPS_FOOT_Z,
 } from "@/lib/architecture/site";
+import { FOOTPATH_FAR, FOOTPATH_NEAR, KERB_HEIGHT, ROAD } from "@/lib/architecture/landscape";
 import type { PlanRect } from "@/types/architecture";
+import { clump } from "./foliage";
+import { Landscape } from "./Landscape";
 import { MATERIALS } from "./materials";
 import { MergeStatic } from "./MergeStatic";
 import { PlanBox } from "./PlanBox";
 import { facadeMaterials } from "./textures";
 
-const GROUND_SIZE = 60;
+/** Ground runs out far enough to meet the haze; see GROUND_REPEAT in Lighting. */
+export const GROUND_SIZE = 500;
 const SOIL_DROP = 0.06;
 const PEBBLE_WIDTH = 0.25;
 
@@ -29,6 +33,8 @@ const FLOWER_MATERIALS = ["#d8343a", "#e46a92", "#f4f1ea", "#f2c14e", "#c8443b"]
   (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.8 }),
 );
 const SOIL = new THREE.MeshStandardMaterial({ color: "#4a3626", roughness: 1 });
+/** Shared lumpy clump for shrubs and the planter tree's crown (scaled per mesh). */
+const SHRUB = clump(1, 23, 2, 0.25);
 const TRUNK = new THREE.MeshStandardMaterial({ color: "#6b5440", roughness: 0.9 });
 
 /** Deterministic PRNG so the planting is identical on every load. */
@@ -65,9 +71,7 @@ function Planter({ rect, height, seed, tree }: { rect: PlanRect; height: number;
       <PlanBox rect={rect} y0={GROUND_LEVEL} y1={top} material={stone} />
       <PlanBox rect={inner} y0={soil} y1={soil + 0.005} material={SOIL} shadow={false} />
       {plants.shrubs.map((s, i) => (
-        <mesh key={`s${i}`} position={[s.p[0], soil + s.r * 0.7, s.p[1]]} material={MATERIALS.leaf} castShadow>
-          <icosahedronGeometry args={[s.r, 1]} />
-        </mesh>
+        <mesh key={`s${i}`} position={[s.p[0], soil + s.r * 0.7, s.p[1]]} scale={s.r} geometry={SHRUB} material={MATERIALS.leaf} castShadow />
       ))}
       {plants.blooms.map((b, i) => (
         <mesh key={`b${i}`} position={[b.p[0], soil + b.y, b.p[1]]} material={b.m}>
@@ -80,9 +84,14 @@ function Planter({ rect, height, seed, tree }: { rect: PlanRect; height: number;
             <cylinderGeometry args={[0.03, 0.05, 2.2, 8]} />
           </mesh>
           {[0, 1, 2].map((k) => (
-            <mesh key={k} position={[treeAt[0] + (k - 1) * 0.25, soil + 2.0 + k * 0.35, treeAt[1] + (k % 2) * 0.15]} material={MATERIALS.leaf} castShadow>
-              <icosahedronGeometry args={[0.45 - k * 0.08, 1]} />
-            </mesh>
+            <mesh
+              key={k}
+              position={[treeAt[0] + (k - 1) * 0.25, soil + 2.0 + k * 0.35, treeAt[1] + (k % 2) * 0.15]}
+              scale={0.45 - k * 0.08}
+              geometry={SHRUB}
+              material={MATERIALS.leaf}
+              castShadow
+            />
           ))}
         </>
       )}
@@ -114,6 +123,22 @@ function Bollard({ x, z }: { x: number; z: number }) {
       <PlanBox rect={r(0.07)} y0={GROUND_LEVEL} y1={GROUND_LEVEL + 0.5} material={MATERIALS.fascia} />
       <PlanBox rect={r(0.055)} y0={GROUND_LEVEL + 0.5} y1={GROUND_LEVEL + 0.6} material={MATERIALS.glow} shadow={false} />
       <PlanBox rect={r(0.075)} y0={GROUND_LEVEL + 0.6} y1={GROUND_LEVEL + 0.65} material={MATERIALS.fascia} />
+    </>
+  );
+}
+
+/** Street in front of the plot: kerbed footpaths each side of an asphalt carriageway with a dashed centre line. */
+function Street() {
+  const mid = (ROAD.z0 + ROAD.z1) / 2;
+  const dashes = Array.from({ length: 48 }, (_, i) => -60 + i * 3);
+  return (
+    <>
+      <PlanBox rect={ROAD} y0={GROUND_LEVEL - 0.02} y1={GROUND_LEVEL + 0.01} material={MATERIALS.asphalt} shadow={false} />
+      <PlanBox rect={FOOTPATH_NEAR} y0={GROUND_LEVEL - 0.02} y1={GROUND_LEVEL + KERB_HEIGHT} material={MATERIALS.path} shadow={false} />
+      <PlanBox rect={FOOTPATH_FAR} y0={GROUND_LEVEL - 0.02} y1={GROUND_LEVEL + KERB_HEIGHT} material={MATERIALS.path} shadow={false} />
+      {dashes.map((x) => (
+        <PlanBox key={x} rect={{ x0: x, x1: x + 1.5, z0: mid - 0.06, z1: mid + 0.06 }} y0={GROUND_LEVEL} y1={GROUND_LEVEL + 0.013} material={MATERIALS.marking} shadow={false} />
+      ))}
     </>
   );
 }
@@ -165,7 +190,9 @@ export function Site() {
         {DOWNPIPES.map((p, i) => (
           <Downpipe key={`pipe${i}`} x={p.x} z={p.z} />
         ))}
+        <Street />
       </MergeStatic>
+      <Landscape />
     </group>
   );
 }

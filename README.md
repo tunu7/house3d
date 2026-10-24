@@ -45,6 +45,8 @@ Next.js (App Router) · TypeScript · React Three Fiber · three.js · drei · Z
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint |
 | `npm run validate` | Geometry checks on the house model (exits non-zero on errors) |
+| `npm run model -- [section] [filter]` | Compact text dump of rooms, walls, openings and furniture |
+| `npm run check` | typecheck + validate + unit tests |
 | `npm test` | Unit tests (model, geometry, furniture, walkthrough physics) |
 | `npm run test:e2e` | Browser tests on desktop, tablet and mobile viewports (builds and starts the app) |
 | `npm run render:gallery` | Re-renders `public/gallery/*.jpg` from the 3D model (needs `npm start -- -p 3123` running) |
@@ -64,6 +66,10 @@ All dimensions live in one typed model under `lib/architecture/`:
 | `railings.ts` | First-floor guard rails |
 | `furniture.ts` | Furniture and fixtures by room |
 | `validation.ts` | Consistency checks — run `npm run validate` after any change |
+| `../style/theme.ts` | Every colour, tile finish and room-kind → floor finish |
+
+Step-by-step recipes (move a wall, add a room, place furniture, restyle) are in
+[`docs/editing-guide.md`](docs/editing-guide.md).
 
 Coordinates are metres in plan space: `x` 0 → 9 left to right seen from the
 front, `z` 0 → 10 front to back. The 3D scene maps them to world space with the

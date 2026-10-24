@@ -33,6 +33,9 @@ export type RoomKind =
   | "void"
   | "balcony";
 
+/** Floor surface finishes (see TILE_FINISHES / ROOM_FLOOR_FINISH in lib/style/theme.ts). */
+export type FloorFinish = "wood" | "marble" | "kitchenTile" | "bathTile" | "splashTile";
+
 export interface Room {
   id: string;
   floor: FloorId;
@@ -49,6 +52,8 @@ export interface Room {
    * lists rooms carved out of this one that count toward that size.
    */
   brief?: { label: string; includes?: string[] };
+  /** Overrides the room kind's default floor finish (`ROOM_FLOOR_FINISH`). */
+  floorFinish?: FloorFinish;
 }
 
 export type OpeningKind = "door" | "window" | "vent";

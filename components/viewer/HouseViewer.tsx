@@ -44,8 +44,14 @@ function vecParam(key: string, fallback: Vec3): Vec3 {
   return parts?.length === 3 && parts.every(Number.isFinite) ? (parts as Vec3) : fallback;
 }
 
-/** `?fx=0` disables post-processing (useful for comparisons and automated checks). */
-const noFx = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("fx") === "0";
+/**
+ * `?fx=0` disables post-processing (useful for comparisons and automated
+ * checks); `?fx=1` keeps it on even when the frame rate is low (offline
+ * renders such as the gallery, where software rendering is slow).
+ */
+const fxParam = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("fx") : null;
+const noFx = fxParam === "0";
+const forceFx = fxParam === "1";
 
 export default function HouseViewer() {
   useUrlViewState();
@@ -84,7 +90,7 @@ export default function HouseViewer() {
           setEffects(quality.postprocessing);
         }}
       />
-      <HouseScene target={vecParam("target", DEFAULT_TARGET)} quality={quality} effects={effects && !noFx} />
+      <HouseScene target={vecParam("target", DEFAULT_TARGET)} quality={quality} effects={forceFx || (effects && !noFx)} />
     </Canvas>
   );
 }

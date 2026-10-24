@@ -5,22 +5,12 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { planToWorld } from "@/lib/architecture/geometry";
 import { HOUSE } from "@/lib/architecture/house";
-import type { FloorId, RoomKind } from "@/types/architecture";
-import { type FloorFinish, floorMaterials } from "./textures";
+import { ROOM_FLOOR_FINISH } from "@/lib/style/theme";
+import type { FloorFinish, FloorId } from "@/types/architecture";
+import { floorMaterials } from "./textures";
 
 /** Offset above the slab top so finishes never z-fight with it. */
 const FINISH_LIFT = 0.005;
-
-const FINISH: Partial<Record<RoomKind, FloorFinish>> = {
-  bedroom: "wood",
-  sitting: "wood",
-  toilet: "bathTile",
-  kitchen: "kitchenTile",
-  living: "marble",
-  dining: "marble",
-  circulation: "marble",
-  balcony: "wood",
-};
 
 /**
  * Per-room floor finishes, merged into one mesh per finish. UVs are in world
@@ -31,7 +21,7 @@ export function RoomFloors({ floor }: { floor: FloorId }) {
   const groups = useMemo(() => {
     const byFinish = new Map<FloorFinish, THREE.BufferGeometry[]>();
     for (const room of HOUSE.rooms.filter((r) => r.floor === floor)) {
-      const finish = FINISH[room.kind];
+      const finish = room.floorFinish ?? ROOM_FLOOR_FINISH[room.kind];
       if (!finish) continue;
       for (const r of room.rects) {
         const w = r.x1 - r.x0;

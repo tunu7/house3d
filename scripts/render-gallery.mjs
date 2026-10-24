@@ -4,8 +4,9 @@
  *   npm run build && npm start -- -p 3123   (in another terminal)
  *   npm run render:gallery
  *
- * Each shot is the /explore viewer with all controls hidden (`ui=0`), a fixed
- * camera and a time of day. Output: public/gallery/<name>.jpg at 1600 × 1000.
+ * Each shot is the /explore viewer with all controls hidden (`ui=0`),
+ * post-processing forced on (`fx=1`; software rendering is too slow for the
+ * frame-rate monitor to keep it), a fixed camera and a time of day. Output: public/gallery/<name>.jpg at 1600 × 1000.
  */
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
@@ -29,12 +30,13 @@ await mkdir(OUT, { recursive: true });
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
 const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
 for (const [name, [query, cam, target]] of Object.entries(SHOTS)) {
-  const q = [query, "ui=0", `cam=${cam.join(",")}`, `target=${target.join(",")}`].filter(Boolean).join("&");
+  const q = [query, "fx=1", "ui=0", `cam=${cam.join(",")}`, `target=${target.join(",")}`].filter(Boolean).join("&");
   await page.goto(`${BASE}/explore?${q}`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => document.querySelector("[role=status]")?.getAttribute("aria-hidden") === "true", null, {
     timeout: 120_000,
   });
-  await page.waitForTimeout(5000);
+  // Effects compile after the scene is ready; give them time in software GL.
+  await page.waitForTimeout(15000);
   await page.locator("section").last().screenshot({ path: new URL(`${name}.jpg`, OUT).pathname, type: "jpeg", quality: 86, timeout: 120_000 });
   console.log("rendered", name);
 }

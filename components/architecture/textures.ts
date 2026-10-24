@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { ARCH_COLORS, TILE_FINISHES } from "@/lib/style/theme";
+import type { FloorFinish } from "@/types/architecture";
 
 /**
  * Procedural textures drawn to canvases — no image downloads. Each texture
@@ -8,10 +10,10 @@ import * as THREE from "three";
  * and render texture catch the light.
  */
 
-const SIZE = 512;
+export const SIZE = 512;
 
 /** Deterministic PRNG so textures look the same on every load. */
-function rng(seed: number) {
+export function rng(seed: number) {
   let s = seed;
   return () => {
     s = (s * 16807) % 2147483647;
@@ -19,7 +21,7 @@ function rng(seed: number) {
   };
 }
 
-type Draw = (ctx: CanvasRenderingContext2D, rand: () => number) => void;
+export type Draw = (ctx: CanvasRenderingContext2D, rand: () => number) => void;
 
 function drawCanvas(draw: Draw, seed: number): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
@@ -69,19 +71,19 @@ function normalFromHeight(source: HTMLCanvasElement, strength: number): HTMLCanv
 }
 
 /** Colour map plus derived normal map for one surface. */
-function surface(draw: Draw, seed: number, metres: number, bump: number) {
+export function surface(draw: Draw, seed: number, metres: number, bump: number) {
   const canvas = drawCanvas(draw, seed);
   return { map: toTexture(canvas, metres, true), normalMap: toTexture(normalFromHeight(canvas, bump), metres, false) };
 }
 
-const shade = (hex: string, amount: number) => {
+export const shade = (hex: string, amount: number) => {
   const c = new THREE.Color(hex);
   c.offsetHSL(0, 0, amount);
   return `#${c.getHexString()}`;
 };
 
 /** Soft, low-frequency mottling: many faint overlapping blotches. */
-function mottle(ctx: CanvasRenderingContext2D, rand: () => number, count: number, alpha: number, light: string, dark: string) {
+export function mottle(ctx: CanvasRenderingContext2D, rand: () => number, count: number, alpha: number, light: string, dark: string) {
   for (let i = 0; i < count; i++) {
     const x = rand() * SIZE;
     const y = rand() * SIZE;
@@ -104,7 +106,7 @@ function mottle(ctx: CanvasRenderingContext2D, rand: () => number, count: number
 }
 
 /** Fine speckle grain. */
-function grain(ctx: CanvasRenderingContext2D, rand: () => number, count: number, alpha: number) {
+export function grain(ctx: CanvasRenderingContext2D, rand: () => number, count: number, alpha: number) {
   for (let i = 0; i < count; i++) {
     const s = 1 + rand() * 1.5;
     ctx.fillStyle = `rgba(${rand() > 0.5 ? "255,255,255" : "0,0,0"},${rand() * alpha})`;
@@ -148,31 +150,129 @@ function grass(ctx: CanvasRenderingContext2D, rand: () => number) {
   }
 }
 
-/** Oak planks, 8 boards across 1.6 m, staggered joints and faint grain. */
+/** Road asphalt: dark aggregate with lighter chips and faint tyre-worn bands. */
+function asphalt(ctx: CanvasRenderingContext2D, rand: () => number) {
+  ctx.fillStyle = "#3d3d3c";
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  mottle(ctx, rand, 110, 0.1, "110,108,104", "15,15,15");
+  grain(ctx, rand, 26000, 0.35);
+}
+
+/** Leaves: dense overlapping light and dark leaf dabs (tinted by vertex colour). */
+function foliage(ctx: CanvasRenderingContext2D, rand: () => number) {
+  ctx.fillStyle = "#7a7a7a";
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  for (let i = 0; i < 5200; i++) {
+    const x = rand() * SIZE;
+    const y = rand() * SIZE;
+    const v = Math.floor(70 + rand() * 185);
+    ctx.fillStyle = `rgba(${v},${v},${v},0.85)`;
+    ctx.beginPath();
+    ctx.ellipse(x, y, 3 + rand() * 5, 1.5 + rand() * 2.5, rand() * Math.PI, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/**
+ * Leaf-card sprite: a spray of small pointed leaves on a transparent ground,
+ * in greys so vertex colours supply the green. Used with alpha testing.
+ */
+function leafSprite(): THREE.CanvasTexture {
+  const size = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  const rand = rng(131);
+  for (let i = 0; i < 38; i++) {
+    const a = rand() * Math.PI * 2;
+    const r = Math.sqrt(rand()) * size * 0.36;
+    const x = size / 2 + Math.cos(a) * r;
+    const y = size / 2 + Math.sin(a) * r;
+    const len = 26 + rand() * 22;
+    const v = Math.floor(150 + rand() * 105);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(a + (rand() - 0.5) * 1.2);
+    ctx.fillStyle = `rgb(${v},${v},${v})`;
+    ctx.beginPath();
+    ctx.moveTo(-len / 2, 0);
+    ctx.quadraticCurveTo(0, -len * 0.28, len / 2, 0);
+    ctx.quadraticCurveTo(0, len * 0.28, -len / 2, 0);
+    ctx.fill();
+    // Midrib.
+    ctx.strokeStyle = `rgba(60,60,60,0.35)`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-len / 2, 0);
+    ctx.lineTo(len / 2, 0);
+    ctx.stroke();
+    ctx.restore();
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+let leafCache: THREE.CanvasTexture | null = null;
+/** The shared leaf-card sprite, created on first use. */
+export function leafTexture(): THREE.CanvasTexture {
+  leafCache ??= leafSprite();
+  return leafCache;
+}
+
+/**
+ * Oak planks, 10 boards across 1.6 m with staggered end joints. Each board
+ * has its own tone and figure: long wavy fibres, a few darker latewood
+ * bands, pores, and the occasional small knot.
+ */
 function wood(ctx: CanvasRenderingContext2D, rand: () => number) {
-  const boards = 8;
+  const boards = 10;
   const bw = SIZE / boards;
   for (let i = 0; i < boards; i++) {
     let y = -rand() * SIZE;
     while (y < SIZE) {
-      const len = SIZE * (0.45 + rand() * 0.5);
-      ctx.fillStyle = shade("#b48a5f", (rand() - 0.5) * 0.08);
+      const len = SIZE * (0.5 + rand() * 0.6);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(i * bw, y, bw, len);
+      ctx.clip();
+      ctx.fillStyle = shade(ARCH_COLORS.floorWood, (rand() - 0.5) * 0.09);
       ctx.fillRect(i * bw, y, bw, len);
-      ctx.strokeStyle = "rgba(60,35,15,0.12)";
-      ctx.lineWidth = 1;
-      for (let g = 0; g < 7; g++) {
-        const gx = i * bw + 4 + rand() * (bw - 8);
+      const amp = 1 + rand() * 4;
+      const phase = rand() * 6;
+      for (let g = 0; g < 34; g++) {
+        const gx = i * bw + rand() * bw;
+        const band = g < 4;
+        ctx.strokeStyle = band ? `rgba(70,40,15,${0.05 + rand() * 0.06})` : `rgba(55,32,12,${0.05 + rand() * 0.14})`;
+        ctx.lineWidth = band ? 3 + rand() * 6 : 0.5 + rand() * 1.2;
         ctx.beginPath();
-        ctx.moveTo(gx, y);
-        ctx.bezierCurveTo(gx + 3, y + len / 3, gx - 3, y + (2 * len) / 3, gx, y + len);
+        for (let t = 0; t <= len; t += 8) {
+          const px = gx + Math.sin(((y + t) / SIZE) * Math.PI * 4 + phase + gx * 0.05) * amp;
+          if (t === 0) ctx.moveTo(px, y + t);
+          else ctx.lineTo(px, y + t);
+        }
         ctx.stroke();
       }
-      ctx.fillStyle = "rgba(40,22,10,0.55)";
-      ctx.fillRect(i * bw, y, bw, 2);
+      for (let k = 0; k < 160; k++) {
+        ctx.fillStyle = `rgba(40,22,8,${0.1 + rand() * 0.15})`;
+        ctx.fillRect(i * bw + rand() * bw, y + rand() * len, 1, 2 + rand() * 4);
+      }
+      if (rand() < 0.25) {
+        const kx = i * bw + bw * (0.25 + rand() * 0.5);
+        const ky = y + rand() * len;
+        ctx.fillStyle = "rgba(60,32,12,0.55)";
+        ctx.beginPath();
+        ctx.ellipse(kx, ky, 2 + rand() * 2, 4 + rand() * 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+      ctx.fillStyle = "rgba(40,22,10,0.5)";
+      ctx.fillRect(i * bw, y, bw, 1.5);
       y += len;
     }
-    ctx.fillStyle = "rgba(40,22,10,0.55)";
-    ctx.fillRect(i * bw, 0, 2, SIZE);
+    ctx.fillStyle = "rgba(40,22,10,0.5)";
+    ctx.fillRect(i * bw, 0, 1.5, SIZE);
   }
 }
 
@@ -236,9 +336,14 @@ function cladding(ctx: CanvasRenderingContext2D, rand: () => number) {
   }
 }
 
-export type FloorFinish = "wood" | "marble" | "kitchenTile" | "bathTile" | "splashTile";
+export type { FloorFinish };
+
+const tileDraw = (f: keyof typeof TILE_FINISHES) => {
+  const t = TILE_FINISHES[f];
+  return tiles(t.base, t.grid, t.grout, t.variation, t.veined);
+};
 export type FacadeFinish = "stone" | "cladding";
-export type SurfaceFinish = "exteriorPlaster" | "interiorPlaster" | "concrete" | "grass";
+export type SurfaceFinish = "exteriorPlaster" | "interiorPlaster" | "concrete" | "grass" | "asphalt" | "foliage";
 
 let floorCache: Record<FloorFinish, THREE.MeshStandardMaterial> | null = null;
 let facadeCache: Record<FacadeFinish, THREE.MeshStandardMaterial> | null = null;
@@ -248,11 +353,11 @@ let surfaceCache: Record<SurfaceFinish, ReturnType<typeof surface>> | null = nul
 export function floorMaterials(): Record<FloorFinish, THREE.MeshStandardMaterial> {
   floorCache ??= {
     wood: new THREE.MeshStandardMaterial({ ...surface(wood, 11, 1.6, 2.5), roughness: 0.55 }),
-    marble: new THREE.MeshStandardMaterial({ ...surface(tiles("#ece6dc", 2, "#cfc8bc", 0.03, true), 23, 1.6, 4), roughness: 0.22 }),
-    kitchenTile: new THREE.MeshStandardMaterial({ ...surface(tiles("#d8d0c4", 2, "#a9a196", 0.05), 37, 1.2, 4), roughness: 0.45 }),
-    bathTile: new THREE.MeshStandardMaterial({ ...surface(tiles("#c9ced1", 3, "#9ea4a8", 0.05), 41, 0.9, 4), roughness: 0.35 }),
+    marble: new THREE.MeshStandardMaterial({ ...surface(tileDraw("marble"), 23, 1.6, 4), roughness: 0.22 }),
+    kitchenTile: new THREE.MeshStandardMaterial({ ...surface(tileDraw("kitchenTile"), 37, 1.2, 4), roughness: 0.45 }),
+    bathTile: new THREE.MeshStandardMaterial({ ...surface(tileDraw("bathTile"), 41, 0.9, 4), roughness: 0.35 }),
     // Small glazed wall tiles (10 cm) for the kitchen backsplash.
-    splashTile: new THREE.MeshStandardMaterial({ ...surface(tiles("#efe8dc", 6, "#cfc6b8", 0.06), 43, 0.6, 4), roughness: 0.15 }),
+    splashTile: new THREE.MeshStandardMaterial({ ...surface(tileDraw("splashTile"), 43, 0.6, 4), roughness: 0.15 }),
   };
   return floorCache;
 }
@@ -273,6 +378,9 @@ export function surfaceTextures(): Record<SurfaceFinish, ReturnType<typeof surfa
     interiorPlaster: surface(plaster, 73, 1.5, 0.6),
     concrete: surface(concrete, 79, 1, 1.5),
     grass: surface(grass, 83, 2, 2),
+    asphalt: surface(asphalt, 89, 2, 2.5),
+    // Foliage meshes use their own 0–1 UVs: four leaf tiles around a clump.
+    foliage: surface(foliage, 97, 0.25, 3),
   };
   return surfaceCache;
 }

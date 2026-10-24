@@ -41,7 +41,7 @@ export default function ShowcaseScene({ active }: { active: boolean }) {
           setEffects(false);
         }}
       />
-      <Lighting shadowMapSize={quality.shadowMapSize} envResolution={quality.envResolution} />
+      <Lighting shadowMapSize={quality.shadowMapSize} envResolution={quality.envResolution} softShadows={quality.postprocessing} />
       <Site />
       <FacadeLamps />
       <HouseShell lampsAll={quality.lamps === "all"} />

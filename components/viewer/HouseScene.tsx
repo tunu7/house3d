@@ -23,7 +23,7 @@ export function HouseScene({ target, quality, effects }: { target: [number, numb
   const walkMode = useViewerStore((s) => s.walkMode);
   return (
     <>
-      <Lighting shadowMapSize={quality.shadowMapSize} envResolution={quality.envResolution} />
+      <Lighting shadowMapSize={quality.shadowMapSize} envResolution={quality.envResolution} softShadows={quality.postprocessing} />
       <Site />
       <FacadeLamps />
       <RoomSelector>
