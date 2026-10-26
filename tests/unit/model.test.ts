@@ -46,9 +46,9 @@ describe("footprint and rooms", () => {
     expect(room("gf-stair").rects).toEqual(room("ff-stair").rects);
   });
 
-  it("keeps every toilet on the west wet strip or over the kitchen", () => {
+  it("keeps every toilet on the east wet strip or over the kitchen", () => {
     for (const id of ["gf-common-toilet", "gf-attached-toilet", "ff-attached-toilet"]) {
-      expect(room(id).rects.every((r) => r.x0 === 0 && r.x1 === 1.5)).toBe(true);
+      expect(room(id).rects.every((r) => r.x0 === 7.5 && r.x1 === 9)).toBe(true);
     }
     const bath = room("ff-bathroom").rects[0];
     const kitchen = room("gf-kitchen").rects[0];
@@ -112,7 +112,7 @@ describe("geometry helpers", () => {
     expect([n.x + 0, n.z]).toEqual([0, -1]);
     const step = HOUSE.walls.find((w) => w.id === "gf-ext-step")!;
     const m = exteriorNormal(step, HOUSE.footprint);
-    expect([m.x, m.z + 0]).toEqual([1, 0]);
+    expect([m.x, m.z + 0]).toEqual([-1, 0]);
   });
 
   it("outlines an L-shaped room without its internal seam", () => {

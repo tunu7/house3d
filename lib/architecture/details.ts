@@ -93,7 +93,7 @@ export function interiorFinishes(floor: FloorId): Record<Finish, Map<string, Box
   for (const room of HOUSE.rooms.filter((r) => r.floor === floor)) {
     if (!NO_SKIRTING.has(room.kind)) merge(result.skirting, roomFinish(room, "skirting"));
     if (room.kind === "toilet") merge(result.wallTile, roomFinish(room, "wallTile"));
-    // Backsplash only along the walls with base cabinets (rear and east walls).
+    // Backsplash only along the walls with base cabinets (rear and west walls).
     if (room.kind === "kitchen") merge(result.backsplash, roomFinish(room, "backsplash", (w) => w.kind === "exterior"));
   }
   return result;
@@ -248,9 +248,9 @@ export const FIXTURES: Fixture[] = (() => {
   // Living room: three globes at staggered drops from the roof slab (double height).
   const doubleHeight = DIMENSIONS.floorToFloor + ceiling;
   [
-    [6.2, 2.4, 4.0],
-    [6.8, 2.9, 4.4],
-    [5.8, 3.0, 4.7],
+    [2.8, 2.4, 4.0],
+    [2.2, 2.9, 4.4],
+    [3.2, 3.0, 4.7],
   ].forEach(([x, z, y], i) =>
     list.push({ id: `living-globe-${i}`, floor: "ground", roomId: "gf-living", kind: "pendant", x, z, y, ceiling: doubleHeight, intensity: 5 }),
   );
@@ -261,7 +261,7 @@ export const FIXTURES: Fixture[] = (() => {
 
 /** Downpipes at the rear corners, plan positions just outside the wall face. */
 export const DOWNPIPES: { x: number; z: number }[] = [
-  { x: 0.35, z: DIMENSIONS.overallDepth + 0.07 },
-  { x: 3.8, z: 8.5 + 0.07 },
-  { x: 8.7, z: 8.5 + 0.07 },
+  { x: 8.65, z: DIMENSIONS.overallDepth + 0.07 },
+  { x: 5.2, z: 8.5 + 0.07 },
+  { x: 0.3, z: 8.5 + 0.07 },
 ];

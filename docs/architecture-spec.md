@@ -33,6 +33,11 @@ All construction values are provisional assumptions.
 
 ## 2. Footprint
 
+> **R10 — mirrored layout.** §2–§7 describe the reference drawing as drawn. The model is now
+> mirrored left ↔ right on both floors: every plan coordinate below maps to `px → 9 − px`
+> (west ↔ east, left ↔ right). The bedroom column and wet strip are on the right (px 5.5–9 /
+> 7.5–9), the living room, dining and kitchen on the left, and the rear notch is behind the kitchen.
+
 Not a full rectangle. The right column is set back at the rear:
 
 ```
@@ -144,3 +149,4 @@ Changes requested by the owner after Stage 7. These supersede the drawing.
 | R7 | (Consequence of R6) Bedroom 2 no longer touches the landing | 1.0 × 2.5 m walkway along the void's west edge from the sitting area to Bedroom 2's front door |
 | R8 | Mini sitting area: small balcony as in the photo, no walls on its right or back | Walls removed (glass railings to the void and stair well); 3.5 × 1.2 m cantilevered balcony with glass railing, timber slat screen and eave; sliding glass doors |
 | R9 | Exterior should look like the owner's reference photo | Cream render, charcoal parapet coping; covered porch on stone pillars with timber soffit, downlights and door surround; wide lit steps; long stone planters with flowers and a small tree; charcoal portal frame with stone pier, timber fins and trailing planter around the first-floor glazing; white eave with timber soffit over the balcony; pale path with pebble edges and bollards; lawn |
+| R10 | Swap the rooms to the opposite side on both floors | Whole plan mirrored left ↔ right (px → 9 − px): rooms, walls, openings (hinges and swings flipped), stair (enters from the living room at the south-west, flight 1 up the west half), railings, slab, void, balcony, furniture, porch, facade trim, rear patio. Sliding doors gained `parked` so their open half mirrors too |

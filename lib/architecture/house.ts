@@ -20,16 +20,16 @@ const SLAB_INSET = 0.01;
  * the sitting area and walkway edges are open, with glass railings.
  */
 const FIRST_SLAB_OUTLINE: PlanPoint[] = [
-  { x: x.left, z: z.front },
   { x: x.split, z: z.front },
-  { x: x.split, z: walkway.z0 },
-  { x: walkway.x1, z: walkway.z0 },
-  { x: walkway.x1, z: bedroomTwoFront - HI },
-  { x: x.right, z: bedroomTwoFront - HI },
-  { x: x.right, z: z.rightRear },
-  { x: x.split, z: z.rightRear },
+  { x: x.right, z: z.front },
+  { x: x.right, z: z.back },
   { x: x.split, z: z.back },
-  { x: x.left, z: z.back },
+  { x: x.split, z: z.leftRear },
+  { x: x.left, z: z.leftRear },
+  { x: x.left, z: bedroomTwoFront - HI },
+  { x: walkway.x0, z: bedroomTwoFront - HI },
+  { x: walkway.x0, z: walkway.z0 },
+  { x: x.split, z: walkway.z0 },
 ];
 
 const rectOutline = (r: { x0: number; x1: number; z0: number; z1: number }): PlanPoint[] => [

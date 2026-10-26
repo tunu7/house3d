@@ -182,7 +182,7 @@ export function Site() {
         />
         <PlanBox rect={REAR_PATIO.rect} y0={GROUND_LEVEL} y1={REAR_PATIO.top} material={MATERIALS.path} />
         {PLANTERS.map((p, i) => (
-          <Planter key={i} rect={p.rect} height={p.height} seed={17 + i * 31} tree={i === 0 ? p.rect.x0 + 0.6 : undefined} />
+          <Planter key={i} rect={p.rect} height={p.height} seed={17 + i * 31} tree={i === 1 ? p.rect.x1 - 0.6 : undefined} />
         ))}
         {BOLLARDS.map((b, i) => (
           <Bollard key={i} x={b.x} z={b.z} />

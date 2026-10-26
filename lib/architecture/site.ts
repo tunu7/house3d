@@ -14,8 +14,8 @@ const D = DIMENSIONS;
 export const PLINTH_OVERHANG = 0.05;
 export const GROUND_LEVEL = -D.plinthHeight;
 
-/** Covered porch at floor level in front of the main door (plan x 3.8–4.8). */
-export const PORCH: PlanRect = { x0: 3.15, x1: 5.45, z0: -1.3, z1: -PLINTH_OVERHANG };
+/** Covered porch at floor level in front of the main door (plan x 4.2–5.2). */
+export const PORCH: PlanRect = { x0: 3.55, x1: 5.85, z0: -1.3, z1: -PLINTH_OVERHANG };
 
 /** Entrance steps down from the porch, full porch width. */
 export const ENTRANCE_STEPS = { x0: PORCH.x0, x1: PORCH.x1, risers: 3, going: 0.3 } as const;
@@ -73,6 +73,6 @@ export const BOLLARDS: { x: number; z: number }[] = [-1.2, -3.6, -6.0].flatMap((
 
 /** Paved open area in the footprint's rear notch, one step below the house floor. */
 export const REAR_PATIO = {
-  rect: { x0: GRID.x.split, x1: GRID.x.right, z0: GRID.z.rightRear, z1: GRID.z.back },
+  rect: { x0: GRID.x.left, x1: GRID.x.split, z0: GRID.z.leftRear, z1: GRID.z.back },
   top: -STEP_RISER,
 } as const;

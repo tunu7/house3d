@@ -74,8 +74,10 @@ function WindowMark({ w, o }: { w: Wall; o: Opening }) {
 function DoorMark({ w, o }: { w: Wall; o: Opening }) {
   if (o.operation === "sliding") {
     const half = (o.from + o.to) / 2;
-    const p1 = [along(w, o.from, -0.04), along(w, half + 0.05, -0.04)];
-    const p2 = [along(w, o.from + 0.05, 0.04), along(w, half + 0.1, 0.04)];
+    // Panels drawn over the parked half; `dir` points from the parked end toward the open half.
+    const [end, dir] = o.parked === "end" ? [o.to, -1] : [o.from, 1];
+    const p1 = [along(w, end, -0.04), along(w, half + dir * 0.05, -0.04)];
+    const p2 = [along(w, end + dir * 0.05, 0.04), along(w, half + dir * 0.1, 0.04)];
     return (
       <g stroke={INK} strokeWidth={0.03}>
         {[p1, p2].map(([a, b], i) => (
@@ -236,7 +238,7 @@ function PlanDrawing({ floor, selected, onSelect }: PlanProps) {
           <polygon key={i} points={p} />
         ))}
       </g>
-      <text x={3.0} y={Y(3.3)} fontSize={0.16} fill={LINE} textAnchor="middle" pointerEvents="none">
+      <text x={6.0} y={Y(3.3)} fontSize={0.16} fill={LINE} textAnchor="middle" pointerEvents="none">
         {floor === "ground" ? "UP" : "DN"}
       </text>
 

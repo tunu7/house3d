@@ -77,6 +77,8 @@ export interface Opening {
   operation?: "swing" | "sliding";
   /** Sliding doors: metal grille (default) or framed glass panels. */
   panel?: "grille" | "glass";
+  /** Sliding doors: which end of the span the panels park over (default "start"); the other half is open. */
+  parked?: "start" | "end";
 }
 
 export type WallKind = "exterior" | "interior";

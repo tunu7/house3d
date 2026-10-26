@@ -6,8 +6,9 @@ const { x, z, wet, gfToiletNorth, ffToiletSouth, bedroomTwoFront, bath, walkway 
 /**
  * Rooms as nominal grid rectangles (partition centrelines / exterior outer faces).
  *
- * The left column's 1.5 m "wet strip" (x 0–1.5) stacks the plumbing: the common
- * toilet and both Bedroom 1 toilets sit on the west wall, with the stair beside it.
+ * The right column's 1.5 m "wet strip" (x 7.5–9) stacks the plumbing: the common
+ * toilet and both Bedroom 1 toilets sit on the east wall, with the stair beside it.
+ * The whole layout is mirrored left ↔ right from the reference drawing (R10).
  */
 export const ROOMS: Room[] = [
   // ── Ground floor ──────────────────────────────────────────────
@@ -17,27 +18,27 @@ export const ROOMS: Room[] = [
     name: "Bedroom 1",
     kind: "bedroom",
     rects: [
-      { x0: wet, x1: x.split, z0: z.band2, z1: gfToiletNorth },
-      { x0: x.left, x1: x.split, z0: gfToiletNorth, z1: z.back },
+      { x0: x.split, x1: wet, z0: z.band2, z1: gfToiletNorth },
+      { x0: x.split, x1: x.right, z0: gfToiletNorth, z1: z.back },
     ],
     drawingLabel: "3.5 m × 4.5 m",
-    notes: ["L-shaped: the attached toilet takes the front-left corner (R6)."],
+    notes: ["L-shaped: the attached toilet takes the front-right corner (R6)."],
   },
   {
     id: "gf-attached-toilet",
     floor: "ground",
     name: "Attached Toilet",
     kind: "toilet",
-    rects: [{ x0: x.left, x1: wet, z0: z.band2, z1: gfToiletNorth }],
+    rects: [{ x0: wet, x1: x.right, z0: z.band2, z1: gfToiletNorth }],
     drawingLabel: "2.0 m × 1.5 m",
-    notes: ["Front-left corner of Bedroom 1, back to back with the common toilet (R6)."],
+    notes: ["Front-right corner of Bedroom 1, back to back with the common toilet (R6)."],
   },
   {
     id: "gf-dining",
     floor: "ground",
     name: "Dining Area",
     kind: "dining",
-    rects: [{ x0: x.split, x1: x.kitchen, z0: z.band2, z1: z.rightRear }],
+    rects: [{ x0: x.kitchen, x1: x.split, z0: z.band2, z1: z.leftRear }],
     drawingLabel: "3.5 m × 3.0 m",
     notes: [
       "Only 3.0 m available between Bedroom 1 and the kitchen; open to living (C5).",
@@ -50,7 +51,7 @@ export const ROOMS: Room[] = [
     floor: "ground",
     name: "Kitchen",
     kind: "kitchen",
-    rects: [{ x0: x.kitchen, x1: x.right, z0: z.band2, z1: z.rightRear }],
+    rects: [{ x0: x.left, x1: x.kitchen, z0: z.band2, z1: z.leftRear }],
     drawingLabel: "2.5 m × 3.0 m",
     notes: ["Open to the dining area across a breakfast table (R5)."],
   },
@@ -59,16 +60,16 @@ export const ROOMS: Room[] = [
     floor: "ground",
     name: "Common Toilet",
     kind: "toilet",
-    rects: [{ x0: x.left, x1: wet, z0: z.band1, z1: z.band2 }],
+    rects: [{ x0: wet, x1: x.right, z0: z.band1, z1: z.band2 }],
     drawingLabel: "1.5 m × 2.5 m",
-    notes: ["Door from Bedroom 2's back-left corner (R6)."],
+    notes: ["Door from Bedroom 2's back-right corner (R6)."],
   },
   {
     id: "gf-stair",
     floor: "ground",
     name: "Staircase",
     kind: "stair",
-    rects: [{ x0: wet, x1: x.split, z0: z.band1, z1: z.band2 }],
+    rects: [{ x0: x.split, x1: wet, z0: z.band1, z1: z.band2 }],
     notes: ["Rises from the living room and arrives in the first-floor sitting area (R6)."],
   },
   {
@@ -76,16 +77,16 @@ export const ROOMS: Room[] = [
     floor: "ground",
     name: "Bedroom 2",
     kind: "bedroom",
-    rects: [{ x0: x.left, x1: x.split, z0: z.front, z1: z.band1 }],
+    rects: [{ x0: x.split, x1: x.right, z0: z.front, z1: z.band1 }],
     drawingLabel: "3.5 m × 3.0 m",
-    notes: ["Has the door to the common toilet in its back-left corner (R6)."],
+    notes: ["Has the door to the common toilet in its back-right corner (R6)."],
   },
   {
     id: "gf-living",
     floor: "ground",
     name: "Living Area",
     kind: "living",
-    rects: [{ x0: x.split, x1: x.right, z0: z.front, z1: z.band2 }],
+    rects: [{ x0: x.left, x1: x.split, z0: z.front, z1: z.band2 }],
     drawingLabel: "5.5 m × 5.5 m",
     notes: [
       "Double height except under the first-floor walkway and the front 1.0 m of Bedroom 2 (R3, R7).",
@@ -100,18 +101,18 @@ export const ROOMS: Room[] = [
     name: "Bedroom 1",
     kind: "bedroom",
     rects: [
-      { x0: x.left, x1: x.split, z0: z.band2, z1: ffToiletSouth },
-      { x0: wet, x1: x.split, z0: ffToiletSouth, z1: z.back },
+      { x0: x.split, x1: x.right, z0: z.band2, z1: ffToiletSouth },
+      { x0: x.split, x1: wet, z0: ffToiletSouth, z1: z.back },
     ],
     drawingLabel: "3.5 m × 4.5 m",
-    notes: ["L-shaped: the attached toilet takes the back-left corner, on the same wall as the toilets below (R6)."],
+    notes: ["L-shaped: the attached toilet takes the back-right corner, on the same wall as the toilets below (R6)."],
   },
   {
     id: "ff-attached-toilet",
     floor: "first",
     name: "Attached Toilet",
     kind: "toilet",
-    rects: [{ x0: x.left, x1: wet, z0: ffToiletSouth, z1: z.back }],
+    rects: [{ x0: wet, x1: x.right, z0: ffToiletSouth, z1: z.back }],
     drawingLabel: "2.0 m × 1.5 m",
   },
   {
@@ -120,8 +121,8 @@ export const ROOMS: Room[] = [
     name: "Bedroom 2",
     kind: "bedroom",
     rects: [
-      { x0: x.split, x1: bath.x0, z0: bedroomTwoFront, z1: z.rightRear },
-      { x0: bath.x0, x1: x.right, z0: bedroomTwoFront, z1: bath.z0 },
+      { x0: bath.x1, x1: x.split, z0: bedroomTwoFront, z1: z.leftRear },
+      { x0: x.left, x1: bath.x1, z0: bedroomTwoFront, z1: bath.z0 },
     ],
     drawingLabel: "5.5 m × 3.0 m",
     brief: { label: "5.5 m × 4.0 m", includes: ["ff-bathroom"] },
@@ -136,7 +137,7 @@ export const ROOMS: Room[] = [
     floor: "first",
     name: "Bedroom 2 Bathroom",
     kind: "toilet",
-    rects: [{ x0: bath.x0, x1: x.right, z0: bath.z0, z1: z.rightRear }],
+    rects: [{ x0: x.left, x1: bath.x1, z0: bath.z0, z1: z.leftRear }],
     notes: ["Owner revision (R4). Above the kitchen, so the plumbing stacks over it."],
   },
   {
@@ -144,14 +145,14 @@ export const ROOMS: Room[] = [
     floor: "first",
     name: "Staircase",
     kind: "stair",
-    rects: [{ x0: wet, x1: x.split, z0: z.band1, z1: z.band2 }],
+    rects: [{ x0: x.split, x1: wet, z0: z.band1, z1: z.band2 }],
   },
   {
     id: "ff-landing",
     floor: "first",
     name: "Landing",
     kind: "circulation",
-    rects: [{ x0: x.left, x1: wet, z0: z.band1, z1: z.band2 }],
+    rects: [{ x0: wet, x1: x.right, z0: z.band1, z1: z.band2 }],
     notes: ["Passage from the sitting area to Bedroom 1, over the common toilet."],
   },
   {
@@ -159,10 +160,10 @@ export const ROOMS: Room[] = [
     floor: "first",
     name: "Mini Sitting Area",
     kind: "sitting",
-    rects: [{ x0: x.left, x1: x.split, z0: z.front, z1: z.band1 }],
+    rects: [{ x0: x.split, x1: x.right, z0: z.front, z1: z.band1 }],
     drawingLabel: "3.5 m × 3.0 m",
     notes: [
-      "Open on the right (to the void, glass railing) and at the back (to the stair and landing) (R8).",
+      "Open on the left (to the void, glass railing) and at the back (to the stair and landing) (R8).",
       "Sliding glass doors to the front balcony (R8).",
     ],
   },
@@ -171,7 +172,7 @@ export const ROOMS: Room[] = [
     floor: "first",
     name: "Walkway",
     kind: "circulation",
-    rects: [{ x0: x.split, x1: walkway.x1, z0: walkway.z0, z1: bedroomTwoFront }],
+    rects: [{ x0: walkway.x0, x1: x.split, z0: walkway.z0, z1: bedroomTwoFront }],
     notes: ["1.0 m walkway along the void with glass railings, from the sitting area to Bedroom 2 (R7)."],
   },
   {

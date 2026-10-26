@@ -46,7 +46,7 @@ export function FacadeLamps() {
   const [px, pz] = planToWorld((PORCH.x0 + PORCH.x1) / 2, (PORCH.z0 + PORCH.z1) / 2);
   const [lx, lz] = planToWorld(PORCH.x0 + 0.6, PORCH.z0 + 0.2);
   const [rx, rz] = planToWorld(PORCH.x1 - 0.6, PORCH.z0 + 0.2);
-  const [fx, fz] = planToWorld(8.2, -0.6);
+  const [fx, fz] = planToWorld(0.8, -0.6);
   return (
     <>
       <spotLight position={[px, CANOPY.bottom - 0.05, pz]} target-position={[px, 0, pz]} angle={0.9} penumbra={0.8} intensity={14} distance={6} color={WARM} />

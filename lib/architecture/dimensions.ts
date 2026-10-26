@@ -23,7 +23,8 @@ const D = DIMENSIONS;
 
 /** Planning grid. Exterior lines are outer faces; interior lines are partition centrelines. */
 export const GRID = {
-  x: { left: 0, split: 3.5, kitchen: 6.5, right: D.overallWidth },
+  /** Mirrored layout (R10): bedroom column on the right, living / kitchen block on the left. */
+  x: { left: 0, kitchen: 2.5, split: 5.5, right: D.overallWidth },
   z: {
     front: 0,
     /** Bedroom 2 / mini sitting ↔ stair band. */
@@ -34,24 +35,24 @@ export const GRID = {
     band2: 5.5,
     /** Attached toilet south wall. */
     toilet: 8.0,
-    /** Rear wall of the right block (derived: kitchen depth 3.0 from band2). */
-    rightRear: 8.5,
+    /** Rear wall of the left block (derived: kitchen depth 3.0 from band2). */
+    leftRear: 8.5,
     back: D.overallDepth,
   },
-  /** Width of the wet strip on the left column (common toilet, both Bedroom 1 toilets, FF landing). */
-  wet: 1.5,
-  /** Ground-floor Bedroom 1 toilet north wall (toilet in the room's front-left corner, R6). */
+  /** Inner line of the 1.5 m wet strip on the right column (common toilet, both Bedroom 1 toilets, FF landing). */
+  wet: D.overallWidth - 1.5,
+  /** Ground-floor Bedroom 1 toilet north wall (toilet in the room's front-right corner, R6). */
   gfToiletNorth: 7.5,
-  /** First-floor Bedroom 1 toilet south wall (toilet in the room's back-left corner, R6). */
+  /** First-floor Bedroom 1 toilet south wall (toilet in the room's back-right corner, R6). */
   ffToiletSouth: 8.0,
-  /** First-floor walkway along the void's west edge, from the sitting area to Bedroom 2 (R7). */
-  walkway: { x1: 4.5, z0: 2.0 },
+  /** First-floor walkway along the void's east edge, from the sitting area to Bedroom 2 (R7). */
+  walkway: { x0: 4.5, z0: 2.0 },
   /** Cantilevered balcony in front of the first-floor sitting area (R8). */
   balconyDepth: 1.2,
   /** First-floor Bedroom 2 front wall: extended 1 m into the void (owner revision R3). */
   bedroomTwoFront: 4.5,
-  /** First-floor Bedroom 2 bathroom, rear-east corner over the kitchen (owner revision R4). */
-  bath: { x0: 7.5, z0: 6.5 },
+  /** First-floor Bedroom 2 bathroom, rear-west corner over the kitchen (owner revision R4). */
+  bath: { x1: 1.5, z0: 6.5 },
 } as const;
 
 export const LEVELS: Record<FloorId, FloorLevel> = {
@@ -61,34 +62,34 @@ export const LEVELS: Record<FloorId, FloorLevel> = {
 
 export const ROOF_TOP = LEVELS.first.ffl + D.ceilingHeight + D.slabThickness;
 
-/** Outer-face footprint (L-shape: right block is set back at the rear). */
+/** Outer-face footprint (L-shape: left block is set back at the rear). */
 export const FOOTPRINT: PlanPoint[] = [
   { x: GRID.x.left, z: GRID.z.front },
   { x: GRID.x.right, z: GRID.z.front },
-  { x: GRID.x.right, z: GRID.z.rightRear },
-  { x: GRID.x.split, z: GRID.z.rightRear },
+  { x: GRID.x.right, z: GRID.z.back },
   { x: GRID.x.split, z: GRID.z.back },
-  { x: GRID.x.left, z: GRID.z.back },
+  { x: GRID.x.split, z: GRID.z.leftRear },
+  { x: GRID.x.left, z: GRID.z.leftRear },
 ];
 
 /** Double-height void over the living room: L-shaped around the first-floor walkway. */
 export const VOID_RECTS: PlanRect[] = [
-  { x0: GRID.x.split, x1: GRID.walkway.x1, z0: GRID.z.front, z1: GRID.walkway.z0 },
-  { x0: GRID.walkway.x1, x1: GRID.x.right, z0: GRID.z.front, z1: GRID.bedroomTwoFront },
+  { x0: GRID.walkway.x0, x1: GRID.x.split, z0: GRID.z.front, z1: GRID.walkway.z0 },
+  { x0: GRID.x.left, x1: GRID.walkway.x0, z0: GRID.z.front, z1: GRID.bedroomTwoFront },
 ];
 
 /** Balcony outside the first-floor front wall, the width of the sitting area. */
 export const BALCONY_RECT: PlanRect = {
-  x0: GRID.x.left,
-  x1: GRID.x.split,
+  x0: GRID.x.split,
+  x1: GRID.x.right,
   z0: GRID.z.front - GRID.balconyDepth,
   z1: GRID.z.front,
 };
 
 /** Clear stair well between the wet strip and the living room, open through the first-floor slab. */
 export const STAIR_OPENING: PlanRect = {
-  x0: GRID.wet + D.interiorWall / 2,
-  x1: GRID.x.split - D.interiorWall / 2,
+  x0: GRID.x.split + D.interiorWall / 2,
+  x1: GRID.wet - D.interiorWall / 2,
   z0: GRID.z.band1 + D.interiorWall / 2,
   z1: GRID.z.band2 - D.interiorWall / 2,
 };

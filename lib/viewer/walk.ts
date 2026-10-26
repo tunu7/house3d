@@ -20,7 +20,7 @@ const RAIL_THICKNESS = 0.06;
 const SITE_LIMIT = 20;
 
 /** Start pose: just inside the main door, looking into the house (yaw 0 faces plan +z). */
-export const WALK_START = { x: 4.3, z: 1.0, yaw: 0, feet: HOUSE.levels.ground.ffl };
+export const WALK_START = { x: 4.7, z: 1.0, yaw: 0, feet: HOUSE.levels.ground.ffl };
 
 const lineRect = (a: PlanPoint, b: PlanPoint, t: number): PlanRect => ({
   x0: Math.min(a.x, b.x) - t / 2,
@@ -40,7 +40,11 @@ function wallColliders(floor: FloorId): PlanRect[] {
     .flatMap((w) => {
       const doors = w.openings
         .filter((o) => o.kind === "door")
-        .map((o) => (o.operation === "sliding" ? { ...o, from: (o.from + o.to) / 2 } : o))
+        .map((o) => {
+          if (o.operation !== "sliding") return o;
+          const mid = (o.from + o.to) / 2;
+          return o.parked === "end" ? { ...o, to: mid } : { ...o, from: mid };
+        })
         .sort((a, b) => a.from - b.from);
       const spans: [number, number][] = [];
       let cursor = w.from;

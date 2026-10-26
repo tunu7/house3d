@@ -77,11 +77,11 @@ function EntrancePortico() {
         material={cladding}
         shadow={false}
       />
-      {[3.75, 4.85].flatMap((x) => [-0.35, -0.95].map((z) => <Downlight key={`${x}${z}`} x={x} z={z} y={CANOPY.bottom - 0.012} material={MATERIALS.glow} />))}
-      {/* Timber surround on the wall face around the door (plan x 3.8–4.8). */}
-      <PlanBox rect={{ x0: 3.5, x1: 3.78, z0: -0.025, z1: 0 }} y0={0} y1={CANOPY.bottom} material={cladding} />
-      <PlanBox rect={{ x0: 4.82, x1: 5.1, z0: -0.025, z1: 0 }} y0={0} y1={CANOPY.bottom} material={cladding} />
-      <PlanBox rect={{ x0: 3.78, x1: 4.82, z0: -0.025, z1: 0 }} y0={2.12} y1={CANOPY.bottom} material={cladding} />
+      {[4.15, 5.25].flatMap((x) => [-0.35, -0.95].map((z) => <Downlight key={`${x}${z}`} x={x} z={z} y={CANOPY.bottom - 0.012} material={MATERIALS.glow} />))}
+      {/* Timber surround on the wall face around the door (plan x 4.2–5.2). */}
+      <PlanBox rect={{ x0: 3.9, x1: 4.18, z0: -0.025, z1: 0 }} y0={0} y1={CANOPY.bottom} material={cladding} />
+      <PlanBox rect={{ x0: 5.22, x1: 5.5, z0: -0.025, z1: 0 }} y0={0} y1={CANOPY.bottom} material={cladding} />
+      <PlanBox rect={{ x0: 4.18, x1: 5.22, z0: -0.025, z1: 0 }} y0={2.12} y1={CANOPY.bottom} material={cladding} />
       {/* Sconces on the pillars' inner faces. */}
       <Sconce rect={{ x0: PILLARS[0].x1, x1: PILLARS[0].x1 + 0.06, z0: PILLARS[0].z0 + 0.13, z1: PILLARS[0].z0 + 0.25 }} y={1.85} />
       <Sconce rect={{ x0: PILLARS[1].x0 - 0.06, x1: PILLARS[1].x0, z0: PILLARS[1].z0 + 0.13, z1: PILLARS[1].z0 + 0.25 }} y={1.85} />
@@ -89,46 +89,46 @@ function EntrancePortico() {
   );
 }
 
-/** First-floor right: charcoal portal frame around the void glazing, timber fins, planter with trailing greenery. */
+/** First-floor left: charcoal portal frame around the void glazing, timber fins, planter with trailing greenery. */
 function FramedGlazing() {
   const { stone, cladding } = facadeMaterials();
   const depth = -0.45;
-  const x0 = 4.55;
-  const x1 = GRID.x.right;
+  const x0 = GRID.x.left;
+  const x1 = 4.45;
   const y0 = SLAB_UNDERSIDE;
   const y1 = ROOF_TOP + 0.05;
   const beam = 0.35;
   return (
     <>
-      <PlanBox rect={{ x0, x1: x0 + 0.3, z0: depth, z1: 0 }} y0={y0} y1={y1} material={MATERIALS.fascia} />
-      <PlanBox rect={{ x0: x1 - 0.5, x1, z0: depth, z1: 0 }} y0={y0} y1={y1} material={stone} />
+      <PlanBox rect={{ x0: x1 - 0.3, x1, z0: depth, z1: 0 }} y0={y0} y1={y1} material={MATERIALS.fascia} />
+      <PlanBox rect={{ x0, x1: x0 + 0.5, z0: depth, z1: 0 }} y0={y0} y1={y1} material={stone} />
       <PlanBox rect={{ x0, x1, z0: depth, z1: 0 }} y0={y1 - beam} y1={y1} material={MATERIALS.fascia} />
-      <PlanBox rect={{ x0: x0 + 0.3, x1: x1 - 0.5, z0: depth + 0.04, z1: 0 }} y0={y1 - beam - 0.012} y1={y1 - beam} material={cladding} shadow={false} />
-      {[5.6, 6.7, 7.8].map((x) => (
+      <PlanBox rect={{ x0: x0 + 0.5, x1: x1 - 0.3, z0: depth + 0.04, z1: 0 }} y0={y1 - beam - 0.012} y1={y1 - beam} material={cladding} shadow={false} />
+      {[1.2, 2.3, 3.4].map((x) => (
         <Downlight key={x} x={x} z={-0.22} y={y1 - beam - 0.012} material={MATERIALS.glow} />
       ))}
       {/* Planter along the frame's foot, with greenery spilling over the front. */}
-      <PlanBox rect={{ x0: x0 + 0.3, x1: x1 - 0.5, z0: -0.65, z1: 0 }} y0={y0} y1={FF + 0.3} material={stone} />
+      <PlanBox rect={{ x0: x0 + 0.5, x1: x1 - 0.3, z0: -0.65, z1: 0 }} y0={y0} y1={FF + 0.3} material={stone} />
       {Array.from({ length: 16 }, (_, i) => {
-        const x = x0 + 0.45 + (i * (x1 - x0 - 1.1)) / 15;
+        const x = x0 + 0.65 + (i * (x1 - x0 - 1.1)) / 15;
         const v = (i * 7) % 5;
         return (
           <group key={i}>
             <Foliage x={x} z={-0.38} y={FF + 0.42 + v * 0.025} r={0.17 + v * 0.015} />
             {/* Trailing growth spilling over the planter's front edge. */}
-            {i % 2 === 0 && <Foliage x={x + 0.06} z={-0.68} y={FF + 0.25} r={0.06 + v * 0.008} stretch={2.5 + v * 0.4} />}
+            {i % 2 === 0 && <Foliage x={x - 0.06} z={-0.68} y={FF + 0.25} r={0.06 + v * 0.008} stretch={2.5 + v * 0.4} />}
           </group>
         );
       })}
-      <Slats x0={7.05} x1={8.3} count={10} z={-0.14} y0={FF + 0.3} y1={y1 - beam} />
-      <Sconce rect={{ x0: x1 - 0.56, x1: x1 - 0.5, z0: -0.3, z1: -0.18 }} y={FF + 1.4} />
+      <Slats x0={0.7} x1={1.95} count={10} z={-0.14} y0={FF + 0.3} y1={y1 - beam} />
+      <Sconce rect={{ x0: x0 + 0.5, x1: x0 + 0.56, z0: -0.3, z1: -0.18 }} y={FF + 1.4} />
     </>
   );
 }
 
-/** Timber slat screen at the balcony's west end. */
+/** Timber slat screen at the balcony's east end. */
 function BalconyScreen() {
-  return <Slats x0={BALCONY_RECT.x0 + 0.12} x1={BALCONY_RECT.x0 + 0.9} count={7} z={BALCONY_RECT.z0 + 0.1} y0={FF} y1={ROOF_TOP - 0.2} />;
+  return <Slats x0={BALCONY_RECT.x1 - 0.9} x1={BALCONY_RECT.x1 - 0.12} count={7} z={BALCONY_RECT.z0 + 0.1} y0={FF} y1={ROOF_TOP - 0.2} />;
 }
 
 /** Facade features by exterior wall id. */
@@ -151,7 +151,7 @@ export function BalconyEave() {
     <>
       <PlanBox rect={eave} y0={y0} y1={ROOF_TOP + 0.1} material={MATERIALS.eave} />
       <PlanBox rect={{ x0: eave.x0 + 0.08, x1: eave.x1 - 0.08, z0: eave.z0 + 0.08, z1: 0 }} y0={y0 - 0.012} y1={y0} material={cladding} shadow={false} />
-      {[0.9, 1.75, 2.6].map((x) => (
+      {[6.4, 7.25, 8.1].map((x) => (
         <Downlight key={x} x={x} z={-0.7} y={y0 - 0.012} material={MATERIALS.glow} />
       ))}
     </>

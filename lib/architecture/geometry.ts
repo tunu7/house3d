@@ -194,8 +194,8 @@ export function paneBox(wall: Wall, o: Opening, baseY: number, frameWidth: numbe
 }
 
 /**
- * Two-panel sliding door in an opening: both panels parked over the `from`
- * half on adjacent tracks (one slid behind the other), leaving the other half
+ * Two-panel sliding door in an opening: both panels parked over the `parked`
+ * half (default `from`) on adjacent tracks (one slid behind the other), leaving the other half
  * of the doorway open. Grille panels are a frame with vertical bars; glass
  * panels are a slim frame around a pane (returned separately as `glass`).
  */
@@ -214,7 +214,7 @@ export function slidingPanelPieces(
   const track = 0.035;
   const clear = o.to - o.from - 2 * frameWidth;
   const panelW = clear / 2 + 0.03;
-  const a0 = o.from + frameWidth;
+  const a0 = o.parked === "end" ? o.to - frameWidth - panelW : o.from + frameWidth;
   const h0 = 0.01;
   const h1 = o.head - frameWidth;
   const metal: BoxPiece[] = [];
