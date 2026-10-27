@@ -13,11 +13,16 @@ export interface Atmosphere {
   hemiIntensity: number;
   /** Strength of image-based lighting (sky reflections and fill). */
   environmentIntensity: number;
-  /** Parameters for drei's physical <Sky> (sun direction is reused). */
-  sky: { turbidity: number; rayleigh: number; mieCoefficient: number; mieDirectionalG: number };
-  /** Sun direction used by the sky shader (may sit below the horizon). */
-  skySun: Vec3;
-  fog: { color: string; near: number; far: number };
+  /**
+   * Photographed sky (equirectangular HDR, CC0 from Poly Haven): shown as the
+   * background and used for image-based lighting, rotated so its sun sits at
+   * `sunPosition`'s azimuth. `background` scales the visible sky.
+   */
+  sky: { file: string; background: number };
+  /** Key light at the sky image's sun elevation (day), or exactly at `sunPosition` (dusk afterglow). */
+  sunFromSky: boolean;
+  /** Distance fog; its colour is taken from the sky's horizon so far objects melt into it. */
+  fog: { near: number; far: number };
   /** Emissive strength of light fittings (downlights, sconces, step strips). */
   glowIntensity: number;
   /** Interior and facade lamps switched on. */
@@ -31,10 +36,13 @@ export interface Atmosphere {
   filmicExposure: number;
   /** Exposure multiplier when the camera is inside the house (eye adaptation). */
   interiorExposure: number;
-  /** Sky brightness multipliers at the horizon and the zenith (see SkyTone). */
-  skyTone: { horizon: number; zenith: number };
-  /** Procedural cloud layer: sunlit and shaded colours (linear, HDR), coverage threshold and opacity. */
-  clouds: { lit: string; shade: string; brightness: number; coverage: number; opacity: number };
+  /**
+   * Path-traced render mode: exposure ahead of AgX (and inside the house, a
+   * higher exposure and a warmer white balance, as a photographer would set
+   * for rooms lit by blue skylight), the strength of the sky and its sun, and
+   * of the interior and facade lamps.
+   */
+  pathTrace: { exposure: number; interiorExposure: number; interiorWhiteBalance: Vec3; sky: number; lamps: number };
   /**
    * Final colour grade, applied after tone mapping in display space: tints
    * added to shadows and highlights (split toning), saturation, S-curve
@@ -60,11 +68,11 @@ export const ATMOSPHERES: Record<TimeOfDay, Atmosphere> = {
     hemiSky: "#d6e4f3",
     hemiGround: "#7d7f5e",
     hemiIntensity: 0.14,
-    environmentIntensity: 0.4,
-    sky: { turbidity: 5, rayleigh: 2, mieCoefficient: 0.004, mieDirectionalG: 0.84 },
-    skySun: [17, 11, 6],
-    // Aerial perspective: distant trees fade into a pale blue haze.
-    fog: { color: "#c4d3e3", near: 40, far: 190 },
+    environmentIntensity: 1.1,
+    sky: { file: "/hdri/day.hdr", background: 3.5 },
+    sunFromSky: true,
+    // Aerial perspective: distant trees fade into the horizon haze.
+    fog: { near: 90, far: 320 },
     glowIntensity: 1.2,
     lampsOn: false,
     bloomIntensity: 0.25,
@@ -73,9 +81,8 @@ export const ATMOSPHERES: Record<TimeOfDay, Atmosphere> = {
     // Bright enough that sunlit render reads warm and clean, not overcast.
     filmicExposure: 0.72,
     interiorExposure: 1.6,
-    skyTone: { horizon: 0.62, zenith: 0.38 },
-    clouds: { lit: "#ffffff", shade: "#aab5c6", brightness: 1.6, coverage: 0.5, opacity: 0.9 },
-    grade: { shadows: [-0.012, 0.0, 0.022], highlights: [0.03, 0.012, -0.018], saturation: 1.12, contrast: 0.22, vignette: 0.42 },
+    pathTrace: { exposure: 1.3, interiorExposure: 5, interiorWhiteBalance: [1.1, 1, 0.84], sky: 1, lamps: 1 },
+    grade: { shadows: [-0.012, 0.0, 0.022], highlights: [0.03, 0.012, -0.018], saturation: 1.3, contrast: 0.35, vignette: 0.42 },
   },
   dusk: {
     sunPosition: [-18, 5, -8],
@@ -85,9 +92,9 @@ export const ATMOSPHERES: Record<TimeOfDay, Atmosphere> = {
     hemiGround: "#3a342b",
     hemiIntensity: 0.7,
     environmentIntensity: 0.5,
-    sky: { turbidity: 8, rayleigh: 2.6, mieCoefficient: 0.006, mieDirectionalG: 0.86 },
-    skySun: [-18, -0.6, -8],
-    fog: { color: "#3c4a6b", near: 35, far: 120 },
+    sky: { file: "/hdri/dusk.hdr", background: 1 },
+    sunFromSky: false,
+    fog: { near: 70, far: 240 },
     glowIntensity: 7,
     lampsOn: true,
     bloomIntensity: 0.9,
@@ -95,8 +102,7 @@ export const ATMOSPHERES: Record<TimeOfDay, Atmosphere> = {
     exposure: 1.1,
     filmicExposure: 0.95,
     interiorExposure: 1.15,
-    skyTone: { horizon: 1, zenith: 0.85 },
-    clouds: { lit: "#ff9e6b", shade: "#38405e", brightness: 0.55, coverage: 0.5, opacity: 0.85 },
+    pathTrace: { exposure: 1, interiorExposure: 1.5, interiorWhiteBalance: [1, 1, 1], sky: 1, lamps: 1 },
     grade: { shadows: [-0.01, 0.0, 0.03], highlights: [0.04, 0.012, -0.025], saturation: 1.08, contrast: 0.2, vignette: 0.5 },
   },
 };

@@ -6,6 +6,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { FloorSwitcher } from "@/components/ui/FloorSwitcher";
 import { MobileRoomSheet } from "@/components/ui/MobileRoomSheet";
 import { Panel, PanelHeading } from "@/components/ui/Panel";
+import { RenderStatus } from "@/components/ui/RenderStatus";
 import { RoomInfoPanel } from "@/components/ui/RoomInfoPanel";
 import { CameraPresets, ResetButton, ViewerToolbar } from "@/components/ui/ViewerToolbar";
 import { WalkHud } from "@/components/ui/WalkHud";
@@ -146,7 +147,8 @@ export function ViewerClient() {
                 <RoomInfoPanel />
               </div>
             </div>
-            <div className="mt-auto hidden justify-center md:flex">
+            <div className="mt-auto hidden flex-col items-center gap-2 md:flex">
+              <RenderStatus />
               <ViewerToolbar />
             </div>
             <div className="mt-auto flex flex-col items-center gap-2 md:hidden">

@@ -2,10 +2,17 @@
 
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
+import type * as THREE from "three";
 import { worldToPlan } from "@/lib/architecture/geometry";
 import { GRID, ROOF_TOP } from "@/lib/architecture/dimensions";
 import { useViewerStore } from "@/lib/store/viewer-store";
 import { ATMOSPHERES } from "@/lib/viewer/atmosphere";
+
+/** True when the camera is inside the house's footprint and below the roof. */
+export function cameraInside(camera: THREE.Camera): boolean {
+  const p = worldToPlan(camera.position.x, camera.position.z);
+  return p.x > GRID.x.left && p.x < GRID.x.right && p.z > GRID.z.front && p.z < GRID.z.back && camera.position.y < ROOF_TOP;
+}
 
 /** Fraction of the remaining gap closed per second (eyes adapt in about a second). */
 const ADAPT_RATE = 3;
@@ -20,9 +27,7 @@ export function AutoExposure() {
   const current = useRef<number | null>(null);
   useFrame(({ camera, gl, invalidate }, delta) => {
     const a = ATMOSPHERES[useViewerStore.getState().timeOfDay];
-    const p = worldToPlan(camera.position.x, camera.position.z);
-    const inside = p.x > GRID.x.left && p.x < GRID.x.right && p.z > GRID.z.front && p.z < GRID.z.back && camera.position.y < ROOF_TOP;
-    const target = a.exposure * (inside ? a.interiorExposure : 1);
+    const target = a.exposure * (cameraInside(camera) ? a.interiorExposure : 1);
     const from = current.current ?? target;
     const next = Math.abs(target - from) < 0.002 ? target : from + (target - from) * Math.min(1, delta * ADAPT_RATE);
     current.current = next;

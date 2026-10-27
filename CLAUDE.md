@@ -27,9 +27,11 @@ or type. Example: `npm run -s model -- furniture gf-living`. Use this instead of
 | New furniture *type* | union in `types/architecture.ts` → component in `components/furniture/*` → `RENDER` in `components/furniture/Furniture.tsx` |
 | Colours, tiles, which floor finish each room kind gets | `lib/style/theme.ts` (only file needed for restyling) |
 | Roughness / metalness / transparency | `components/architecture/materials.ts`, `components/furniture/parts.tsx` |
-| Porch, steps, planters, path, rear patio | `lib/architecture/site.ts` |
-| Garden, hedge, trees, street | `lib/architecture/landscape.ts` |
-| Sky, sun, day/dusk lighting | `lib/viewer/atmosphere.ts` |
+| Plot size / house position on the land | `SITE_PLAN` in `lib/architecture/plot.ts` |
+| Porch, steps, planters, path, rear patio, driveway, gates, pool & gym | `lib/architecture/site.ts` |
+| Compound wall, gazebo, vegetable beds, trees & palms, lawn, street | `lib/architecture/landscape.ts` |
+| Sky (HDRI in `public/hdri/`), sun, day/dusk lighting, grade | `lib/viewer/atmosphere.ts` |
+| Photoreal (path-traced) render: look | `pathTrace` in `lib/viewer/atmosphere.ts`; proxy scene & denoiser in `components/viewer/PathTracer.tsx` |
 | Property page copy, price, contact, per-room blurbs | `lib/property.ts` |
 
 Derived automatically — don't edit for layout changes: skirting, bathroom tiling, backsplash,
@@ -58,6 +60,6 @@ or `test:e2e` when touching pages/UI. Recipes and gotchas: `docs/editing-guide.m
 
 ## Don't read
 
-`package-lock.json`, `tsconfig.tsbuildinfo`, `.next/`, `public/gallery/`, `test-results/`.
+`package-lock.json`, `tsconfig.tsbuildinfo`, `.next/`, `public/gallery/`, `public/hdri/`, `test-results/`.
 `components/architecture/textures.ts` is canvas-drawing code — only open it to change a pattern;
 tile colours are in `theme.ts`.

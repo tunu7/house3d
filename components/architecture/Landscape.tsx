@@ -3,15 +3,15 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { planToWorld } from "@/lib/architecture/geometry";
-import { HEDGE, LAWN, TREES, hedgeRuns, lawnExclusions, type Tree, type TreeKind } from "@/lib/architecture/landscape";
+import { DRIVEWAY_HEDGE, LAWN, TREES, lawnExclusions, type Tree, type TreeKind } from "@/lib/architecture/landscape";
 import { GROUND_LEVEL } from "@/lib/architecture/site";
 import { initialQuality } from "@/lib/viewer/quality";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { grassTuft, hedgeGeometry, treeGeometry } from "./foliage";
+import { grassTuft, hedgeGeometry, palmGeometry, treeGeometry } from "./foliage";
+import { FINE_DETAIL, TRANSLUCENT } from "./materials";
 import { leafTexture, surfaceTextures } from "./textures";
 
 /** 3D grass tufts per square metre of lawn, by quality tier. */
-const GRASS_DENSITY = { high: 60, low: 18 };
+const GRASS_DENSITY = { high: 45, low: 14 };
 
 function rng(seed: number) {
   let s = seed;
@@ -29,11 +29,19 @@ function createMaterials() {
       alphaTest: 0.45,
       alphaToCoverage: true,
       side: THREE.DoubleSide,
+      userData: { [FINE_DETAIL]: true },
     }),
-    core: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: foliage.map }),
+    core: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, map: foliage.map, userData: { [FINE_DETAIL]: true } }),
+    /** Palm leaflets: solid blades seen from both sides; matte, so thin blades don't sparkle with sky reflections. */
+    fronds: new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.9,
+      side: THREE.DoubleSide,
+      userData: { [FINE_DETAIL]: true, [TRANSLUCENT]: true },
+    }),
     hedge: new THREE.MeshStandardMaterial({ color: "#5b7d3a", roughness: 0.9, map: foliage.map, normalMap: foliage.normalMap }),
     bark: new THREE.MeshStandardMaterial({ color: "#5a4636", roughness: 0.95 }),
-    grass: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide }),
+    grass: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide, userData: { [FINE_DETAIL]: true } }),
   };
 }
 
@@ -70,7 +78,7 @@ const scl = new THREE.Vector3();
 
 /** One kind of tree with or without shadows: instanced leaves, crown core and trunk. */
 function TreeSet({ kind, trees, seed }: { kind: TreeKind; trees: Tree[]; seed: number }) {
-  const geo = useMemo(() => treeGeometry(kind, seed), [kind, seed]);
+  const geo = useMemo(() => (kind === "palm" ? palmGeometry(seed) : treeGeometry(kind, seed)), [kind, seed]);
   const mat = materials!;
   const place = (i: number, m: THREE.Matrix4) => {
     const t = trees[i];
@@ -93,28 +101,23 @@ function TreeSet({ kind, trees, seed }: { kind: TreeKind; trees: Tree[]; seed: n
   const shadow = trees[0]?.shadow ?? false;
   return (
     <>
-      <instancedMesh ref={leaves} args={[geo.leaves, mat.leaves, trees.length]} castShadow={shadow} receiveShadow />
+      <instancedMesh ref={leaves} args={[geo.leaves, kind === "palm" ? mat.fronds : mat.leaves, trees.length]} castShadow={shadow} receiveShadow />
       <instancedMesh ref={core} args={[geo.core, mat.core, trees.length]} castShadow={shadow} receiveShadow />
       <instancedMesh ref={trunk} args={[geo.trunk, mat.bark, trees.length]} castShadow={shadow} receiveShadow />
     </>
   );
 }
 
-/** Clipped boundary hedge around the plot, open at the front path: one merged mesh. */
+/** Low clipped hedge along the driveway: one mesh. */
 function Hedge() {
   const geo = useMemo(() => {
-    const parts = hedgeRuns().map((r, i) => {
-      const [ax, az] = planToWorld(r.a.x, r.a.z);
-      const [bx, bz] = planToWorld(r.b.x, r.b.z);
-      const len = Math.hypot(bx - ax, bz - az);
-      const g = hedgeGeometry(len + HEDGE.width, HEDGE.height, HEDGE.width, 41 + i * 5);
-      g.rotateY(-Math.atan2(bz - az, bx - ax));
-      g.translate((ax + bx) / 2, GROUND_LEVEL, (az + bz) / 2);
-      return g;
-    });
-    const merged = mergeGeometries(parts)!;
-    parts.forEach((p) => p.dispose());
-    return merged;
+    const { a, b, height, width } = DRIVEWAY_HEDGE;
+    const [ax, az] = planToWorld(a.x, a.z);
+    const [bx, bz] = planToWorld(b.x, b.z);
+    const g = hedgeGeometry(Math.hypot(bx - ax, bz - az), height, width, 41);
+    g.rotateY(-Math.atan2(bz - az, bx - ax));
+    g.translate((ax + bx) / 2, GROUND_LEVEL, (az + bz) / 2);
+    return g;
   }, []);
   return <mesh geometry={geo} material={materials!.hedge} castShadow receiveShadow />;
 }
@@ -133,6 +136,8 @@ function Grass({ density }: { density: number }) {
     for (let i = 0; i < area * density; i++) {
       const x = LAWN.x0 + rand() * (LAWN.x1 - LAWN.x0);
       const z = LAWN.z0 + rand() * (LAWN.z1 - LAWN.z0);
+      // Thin out toward the open back edge so the 3D lawn melts into the textured ground beyond.
+      if (rand() > Math.min(1, (LAWN.z1 - z) / LAWN.fadeBack)) continue;
       if (!holes.some((r) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1)) out.push([x, z]);
     }
     return out;
@@ -162,7 +167,7 @@ export function Landscape() {
   materials ??= createMaterials();
   const groups = useMemo(() => {
     const out: { key: string; kind: TreeKind; trees: Tree[] }[] = [];
-    for (const kind of ["broadleaf", "columnar"] as const) {
+    for (const kind of ["broadleaf", "columnar", "palm"] as const) {
       for (const shadow of [true, false]) {
         const trees = TREES.filter((t) => t.kind === kind && t.shadow === shadow);
         if (trees.length) out.push({ key: `${kind}-${shadow}`, kind, trees });

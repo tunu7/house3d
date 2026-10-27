@@ -10,6 +10,7 @@ import {
   GROUND_LEVEL,
   PATH,
   PLANTERS,
+  POOL,
   PORCH,
   REAR_PATIO,
   STEP_TREADS,
@@ -18,14 +19,37 @@ import {
 import { FOOTPATH_FAR, FOOTPATH_NEAR, KERB_HEIGHT, ROAD } from "@/lib/architecture/landscape";
 import type { PlanRect } from "@/types/architecture";
 import { clump } from "./foliage";
+import { Grounds } from "./Grounds";
 import { Landscape } from "./Landscape";
 import { MATERIALS } from "./materials";
 import { MergeStatic } from "./MergeStatic";
 import { PlanBox } from "./PlanBox";
+import { PoolGym } from "./PoolGym";
 import { facadeMaterials } from "./textures";
 
 /** Ground runs out far enough to meet the haze; see GROUND_REPEAT in Lighting. */
 export const GROUND_SIZE = 500;
+
+/**
+ * The ground: a square plane with the pool cut out of it (the basin sits
+ * below ground level). UVs span 0–1 over the whole plane, as a plane's do, so
+ * the lawn texture's repeat keeps its scale.
+ */
+function groundGeometry() {
+  const h = GROUND_SIZE / 2;
+  const shape = new THREE.Shape([new THREE.Vector2(-h, -h), new THREE.Vector2(h, -h), new THREE.Vector2(h, h), new THREE.Vector2(-h, h)]);
+  // Shape (x, y) becomes world (x, −z) once the mesh is turned flat.
+  const corner = (x: number, z: number) => {
+    const [wx, wz] = planToWorld(x, z);
+    return new THREE.Vector2(wx, -wz);
+  };
+  shape.holes.push(new THREE.Path([corner(POOL.x0, POOL.z0), corner(POOL.x0, POOL.z1), corner(POOL.x1, POOL.z1), corner(POOL.x1, POOL.z0)]));
+  const g = new THREE.ShapeGeometry(shape);
+  const pos = g.attributes.position;
+  const uv = g.attributes.uv;
+  for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) + h) / GROUND_SIZE, (pos.getY(i) + h) / GROUND_SIZE);
+  return g;
+}
 const SOIL_DROP = 0.06;
 const PEBBLE_WIDTH = 0.25;
 
@@ -144,17 +168,17 @@ function Street() {
 }
 
 /**
- * Site after the owner's reference photo (R9): lawn, covered porch, wide lit
- * steps, long stone planters with flowers and a small tree, a pale path edged
- * with pebbles and bollards, and the paved rear open area (R2).
+ * Site after the owner's reference photo (R9) and site plan (R11): lawn,
+ * covered porch, wide lit steps, long stone planters with flowers and a small
+ * tree, a pale path edged with pebbles and bollards to the front gate, the
+ * paved rear open area (R2), the pool and gym, and the walled grounds.
  */
 export function Site() {
   const path: PlanRect = { x0: PATH.x0, x1: PATH.x1, z0: STEPS_FOOT_Z - PATH.length, z1: STEPS_FOOT_Z };
+  const ground = useMemo(() => groundGeometry(), []);
   return (
     <group>
-      <mesh rotation-x={-Math.PI / 2} position-y={GROUND_LEVEL} material={MATERIALS.ground} receiveShadow>
-        <planeGeometry args={[GROUND_SIZE, GROUND_SIZE]} />
-      </mesh>
+      <mesh geometry={ground} rotation-x={-Math.PI / 2} position-y={GROUND_LEVEL} material={MATERIALS.ground} receiveShadow />
       <MergeStatic>
         <PlanBox rect={path} y0={GROUND_LEVEL} y1={GROUND_LEVEL + 0.02} material={MATERIALS.path} />
         <PlanBox rect={{ ...path, x0: path.x0 - PEBBLE_WIDTH, x1: path.x0 }} y0={GROUND_LEVEL} y1={GROUND_LEVEL + 0.015} material={MATERIALS.pebbles} />
@@ -192,6 +216,8 @@ export function Site() {
         ))}
         <Street />
       </MergeStatic>
+      <PoolGym />
+      <Grounds />
       <Landscape />
     </group>
   );

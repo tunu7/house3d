@@ -38,6 +38,8 @@ interface ViewerState {
   contextLost: boolean;
   /** Lighting preset: daylight, or dusk with interior and facade lights on. */
   timeOfDay: TimeOfDay;
+  /** Path-traced render mode: progressively refines a photoreal still whenever the camera rests. */
+  renderMode: boolean;
 
   setViewMode: (mode: ViewMode) => void;
   toggleFloor: (floor: FloorId) => void;
@@ -54,6 +56,7 @@ interface ViewerState {
   setReady: () => void;
   setContextLost: (lost: boolean) => void;
   setTimeOfDay: (time: TimeOfDay) => void;
+  setRenderMode: (on: boolean) => void;
 }
 
 type ModeState = Pick<ViewerState, "floors" | "layers" | "cutaway">;
@@ -88,6 +91,7 @@ export const useViewerStore = create<ViewerState>()((set, get) => ({
   ready: false,
   contextLost: false,
   timeOfDay: "day",
+  renderMode: false,
 
   setViewMode: (mode) =>
     set((s) => ({
@@ -159,4 +163,5 @@ export const useViewerStore = create<ViewerState>()((set, get) => ({
   setReady: () => set({ ready: true }),
   setContextLost: (contextLost) => set({ contextLost }),
   setTimeOfDay: (timeOfDay) => set({ timeOfDay }),
+  setRenderMode: (renderMode) => set({ renderMode }),
 }));

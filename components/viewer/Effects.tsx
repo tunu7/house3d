@@ -6,22 +6,13 @@ import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { useViewerStore } from "@/lib/store/viewer-store";
 import { ATMOSPHERES, type Atmosphere } from "@/lib/viewer/atmosphere";
+import { GRADE_GLSL } from "./grade";
 
 const gradeShader = /* glsl */ `
-uniform vec3 shadowTint;
-uniform vec3 highlightTint;
-uniform float saturation;
-uniform float contrast;
+${GRADE_GLSL}
 
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-  // Grade in display space (approximate sRGB), where the curves are perceptual.
-  vec3 g = pow(max(inputColor.rgb, 0.0), vec3(1.0 / 2.2));
-  float l = dot(g, vec3(0.2126, 0.7152, 0.0722));
-  g += shadowTint * (1.0 - smoothstep(0.0, 0.55, l)) + highlightTint * smoothstep(0.4, 1.0, l);
-  g = clamp(g, 0.0, 1.0);
-  g = mix(g, g * g * (3.0 - 2.0 * g), contrast);
-  g = mix(vec3(dot(g, vec3(0.2126, 0.7152, 0.0722))), g, saturation);
-  outputColor = vec4(pow(clamp(g, 0.0, 1.0), vec3(2.2)), inputColor.a);
+  outputColor = vec4(grade(inputColor.rgb), inputColor.a);
 }`;
 
 const exposureShader = /* glsl */ `

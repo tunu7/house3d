@@ -47,6 +47,19 @@ export const ARCH_COLORS = {
   /** Oak floorboards (bedrooms, lounge, balcony). */
   floorWood: "#a88b68",
   glass: "#c6d8e0",
+  // Grounds (R11): driveway pavers, gym floor, pool, garden beds.
+  /** Grey concrete pavers (tints the concrete texture). */
+  paving: "#a7a39b",
+  /** Gym floor: charcoal rubber tiles. */
+  rubber: "#34373a",
+  /** Pool basin: pale aqua mosaic. */
+  poolTile: "#8ccbd6",
+  /** Pool water: tint of the real-time surface, and the photoreal water's absorption colour. */
+  water: "#2f8fa6",
+  /** Gazebo and bed timber, gazebo roof shingles. */
+  timber: "#7a5a3c",
+  roofShingle: "#4a3b32",
+  soil: "#4a3626",
 } as const;
 
 /** Furniture palette: neutral, warm, with sage accents from the reference drawing. */

@@ -1,9 +1,9 @@
 "use client";
 
-import { Environment, Lightformer, Sky, SoftShadows } from "@react-three/drei";
+import { Environment, SoftShadows } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { useEffect } from "react";
-import type * as THREE from "three";
+import { useEffect, useMemo } from "react";
+import * as THREE from "three";
 import { MATERIALS } from "@/components/architecture/materials";
 import { GROUND_SIZE } from "@/components/architecture/Site";
 import { surfaceTextures } from "@/components/architecture/textures";
@@ -12,7 +12,7 @@ import { useViewerStore } from "@/lib/store/viewer-store";
 import { ARCH_COLORS } from "@/lib/style/theme";
 import { ATMOSPHERES } from "@/lib/viewer/atmosphere";
 import { AutoExposure } from "./AutoExposure";
-import { Clouds, SkyTone } from "./Clouds";
+import { useSky } from "./hdri";
 
 /** Lawn texture tiles every 2 m across the whole ground plane. */
 const GROUND_REPEAT = GROUND_SIZE / 2;
@@ -31,6 +31,7 @@ function useSurfaceTextures() {
     apply(MATERIALS.interiorWall, t.interiorPlaster);
     apply(MATERIALS.eave, t.exteriorPlaster);
     apply(MATERIALS.path, t.concrete);
+    apply(MATERIALS.paving, t.concrete);
     apply(MATERIALS.asphalt, t.asphalt);
     apply(MATERIALS.leaf, t.foliage);
     MATERIALS.leaf.color.set(ARCH_COLORS.leafTextured);
@@ -46,15 +47,23 @@ function useSurfaceTextures() {
 }
 
 /**
- * Sky, image-based lighting, sun and fill for the current time of day. The
- * environment map is rendered once from the same procedural sky (plus a few
- * soft light panels), so glass and metal reflect what you see.
+ * Sky, image-based lighting, sun and fill for the current time of day. A
+ * photographed HDR sky is both the visible background and the environment
+ * light, so glass and metal reflect the clouds you see; the key light comes
+ * from the sky's own sun and the fog fades to its horizon. Suspends while the
+ * sky image loads.
  */
-export function Lighting({ shadowMapSize, envResolution, softShadows }: { shadowMapSize: number; envResolution: number; softShadows: boolean }) {
+export function Lighting({ shadowMapSize, softShadows }: { shadowMapSize: number; softShadows: boolean }) {
   useSurfaceTextures();
   const time = useViewerStore((s) => s.timeOfDay);
   const a = ATMOSPHERES[time];
   const get = useThree((s) => s.get);
+  const sky = useSky(a);
+  const sunPosition = useMemo(
+    () => (a.sunFromSky ? sky.sun.clone().multiplyScalar(new THREE.Vector3(...a.sunPosition).length()) : new THREE.Vector3(...a.sunPosition)),
+    [a, sky],
+  );
+  const fogColor = useMemo(() => sky.horizon.clone().multiplyScalar(a.sky.background), [a, sky]);
 
   useEffect(() => {
     MATERIALS.glow.emissiveIntensity = a.glowIntensity;
@@ -69,22 +78,19 @@ export function Lighting({ shadowMapSize, envResolution, softShadows }: { shadow
         surface, softening with distance, as under a real sun or lamp.
       */}
       {softShadows && <SoftShadows size={14} samples={12} focus={0.6} />}
-      <Sky sunPosition={a.skySun} {...a.sky} />
-      <SkyTone atmosphere={a} />
-      <Clouds atmosphere={a} />
-      <fog attach="fog" args={[a.fog.color, a.fog.near, a.fog.far]} />
-      <Environment key={time} frames={1} resolution={envResolution} environmentIntensity={a.environmentIntensity}>
-        <Sky sunPosition={a.skySun} {...a.sky} distance={400} />
-        <SkyTone atmosphere={a} />
-      <Clouds atmosphere={a} />
-        {/* Soft overhead and side panels give glossy surfaces a studio-like sheen. */}
-        <Lightformer form="rect" intensity={time === "day" ? 1.5 : 0.4} position={[0, 40, 0]} rotation-x={Math.PI / 2} scale={[60, 60, 1]} />
-        <Lightformer form="rect" intensity={time === "day" ? 0.6 : 1.2} color={time === "day" ? "#ffffff" : "#ffb070"} position={[-40, 6, -10]} rotation-y={Math.PI / 2} scale={[40, 8, 1]} />
-      </Environment>
+      <fog attach="fog" args={[fogColor, a.fog.near, a.fog.far]} />
+      <Environment
+        map={sky.texture}
+        background
+        backgroundIntensity={a.sky.background}
+        backgroundRotation={sky.rotation}
+        environmentIntensity={a.environmentIntensity}
+        environmentRotation={sky.rotation}
+      />
       <AutoExposure />
       <hemisphereLight args={[a.hemiSky, a.hemiGround, a.hemiIntensity]} />
       <directionalLight
-        position={a.sunPosition}
+        position={sunPosition}
         color={a.sunColor}
         intensity={a.sunIntensity}
         castShadow

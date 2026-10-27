@@ -2,6 +2,16 @@ import * as THREE from "three";
 import { ARCH_COLORS } from "@/lib/style/theme";
 
 /**
+ * `userData` flag for materials whose detail is finer than a pixel (grass
+ * blades, leaf cards): the path tracer's denoiser filters them as a whole
+ * instead of separating surface colour from lighting.
+ */
+export const FINE_DETAIL = "fineDetail";
+
+/** `userData` flag for thin leaves the path tracer should let some light through (backlit palm fronds). */
+export const TRANSLUCENT = "translucent";
+
+/**
  * Shared, lightweight materials. Created once per module and reused by every
  * mesh so there is a single GPU program per surface type.
  */
@@ -13,7 +23,8 @@ export const MATERIALS = {
   slab: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.slab, roughness: 0.9 }),
   plinth: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.plinth, roughness: 0.9 }),
   roof: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.roof, roughness: 0.9 }),
-  ground: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.ground, roughness: 1 }),
+  // Lawn: seen between grass blades, so filtered as fine detail by the path tracer's denoiser.
+  ground: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.ground, roughness: 1, userData: { [FINE_DETAIL]: true } }),
   path: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.path, roughness: 0.85 }),
   /** Street carriageway (textured at runtime) and its white lane markings. */
   asphalt: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.asphalt, roughness: 0.92 }),
@@ -49,6 +60,26 @@ export const MATERIALS = {
   doorWood: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.doorWood, roughness: 0.65 }),
   entranceDoor: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.entranceDoor, roughness: 0.55 }),
   stairTread: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.stairTread, roughness: 0.7 }),
+  /** Driveway pavers (concrete texture added at runtime). */
+  paving: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.paving, roughness: 0.9 }),
+  rubber: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.rubber, roughness: 0.95 }),
+  poolTile: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.poolTile, roughness: 0.35 }),
+  /**
+   * Pool water in real time: a glossy, tinted, partly see-through surface.
+   * The photoreal render swaps in refracting water (see PathTracer).
+   */
+  water: new THREE.MeshStandardMaterial({
+    color: ARCH_COLORS.water,
+    roughness: 0.04,
+    metalness: 0.1,
+    envMapIntensity: 1.6,
+    transparent: true,
+    opacity: 0.72,
+    depthWrite: false,
+  }),
+  timber: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.timber, roughness: 0.75 }),
+  roofShingle: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.roofShingle, roughness: 0.9 }),
+  soil: new THREE.MeshStandardMaterial({ color: ARCH_COLORS.soil, roughness: 1 }),
   /**
    * Glazing: transparent with strong environment reflections instead of a
    * costly transmission pass, so windows mirror the sky at grazing angles.

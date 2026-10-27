@@ -25,6 +25,8 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "three": "^0.186.1",
+    "three-gpu-pathtracer": "^0.0.27",
+    "three-mesh-bvh": "^0.9.16",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
@@ -40,6 +42,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",
+    "vite": "^8.3.5",
     "vitest": "^5.0.5"
   }
 }

@@ -168,6 +168,95 @@ export function treeGeometry(kind: "broadleaf" | "columnar", seed: number): Tree
 }
 
 /**
+ * Unit-height palm (scaled per instance): a slender, slightly leaning trunk
+ * and a crown of arching fronds, each a spine of stiff, narrow leaflets in a
+ * shallow V. The leaflets are solid blades (no leaf texture): see the palm
+ * frond material in Landscape.
+ */
+export function palmGeometry(seed: number): TreeGeometry {
+  let s = seed;
+  const rand = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const lean = new THREE.Vector3((rand() - 0.5) * 0.12, 0, (rand() - 0.5) * 0.12);
+  const crown = new THREE.Vector3(lean.x, 0.86, lean.z);
+
+  // Trunk: a few tapered segments following a gentle curve to the crown.
+  const segments = 6;
+  const trunkParts: THREE.BufferGeometry[] = [];
+  const at = (t: number) => new THREE.Vector3(lean.x * t * t, 0.86 * t, lean.z * t * t);
+  for (let i = 0; i < segments; i++) {
+    const a = at(i / segments);
+    const b = at((i + 1) / segments);
+    const len = a.distanceTo(b);
+    const part = new THREE.CylinderGeometry(0.017 - 0.005 * ((i + 1) / segments), 0.017 - 0.005 * (i / segments), len * 1.02, 8);
+    part.translate(0, len / 2, 0);
+    part.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()));
+    part.translate(a.x, a.y, a.z);
+    trunkParts.push(part.toNonIndexed());
+    part.dispose();
+  }
+  const trunk = mergeGeometries(trunkParts)!;
+  trunkParts.forEach((p) => p.dispose());
+
+  // Fronds: an arching spine with stiff, narrow leaflets in pairs, folded into a shallow V.
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const uvs: number[] = [];
+  const colors: number[] = [];
+  const dark = new THREE.Color("#2f5220");
+  const light = new THREE.Color("#8fb24a");
+  const c = new THREE.Color();
+  const fronds = 15;
+  const spine = (dir: THREE.Vector3, length: number, rise: number, droop: number, t: number) =>
+    new THREE.Vector3(dir.x * length * t, rise * t - droop * t * t, dir.z * length * t).add(crown);
+  const up = new THREE.Vector3(0, 1, 0);
+  for (let f = 0; f < fronds; f++) {
+    const angle = (f / fronds) * Math.PI * 2 + rand() * 0.3;
+    const dir = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
+    const side = new THREE.Vector3(-dir.z, 0, dir.x);
+    const length = 0.4 + rand() * 0.12;
+    const rise = 0.14 + rand() * 0.1;
+    const droop = 0.2 + rand() * 0.1;
+    const leaflets = 38;
+    for (let k = 1; k <= leaflets; k++) {
+      const t = k / (leaflets + 1);
+      const p = spine(dir, length, rise, droop, t);
+      const tangent = spine(dir, length, rise, droop, t + 0.01).sub(p).normalize();
+      // Leaflets are longest mid-frond and short at both ends.
+      const len = 0.13 * Math.sin(Math.PI * Math.min(1, t * 1.15)) + 0.02;
+      const width = 0.007;
+      c.copy(dark).lerp(light, THREE.MathUtils.clamp(0.3 + t * 0.5 + rand() * 0.15, 0, 1));
+      for (const sign of [-1, 1]) {
+        // Out to the side, angled toward the tip and slightly down: the V of a palm frond.
+        const out = side.clone().multiplyScalar(sign).addScaledVector(tangent, 0.45).add(new THREE.Vector3(0, -0.25, 0)).normalize();
+        const across = new THREE.Vector3().crossVectors(out, up).normalize().multiplyScalar(width / 2);
+        const n = new THREE.Vector3().crossVectors(across, out).normalize();
+        if (n.y < 0) n.negate();
+        const tip = p.clone().addScaledVector(out, len);
+        // A slim blade: wide at the base, pointed at the tip.
+        const tri = [p.clone().add(across), p.clone().sub(across), tip];
+        for (const v of tri) {
+          positions.push(v.x, v.y, v.z);
+          normals.push(n.x, n.y, n.z);
+          uvs.push(0.5, 0.5);
+          colors.push(c.r, c.g, c.b);
+        }
+      }
+    }
+  }
+  const leaves = new THREE.BufferGeometry();
+  leaves.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  leaves.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+  leaves.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  leaves.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+
+  // Crown: the dark knot of frond bases (and coconuts) where the fronds meet.
+  const core = clump(0.026, seed, 1, 0.35);
+  core.translate(crown.x, crown.y - 0.01, crown.z);
+  shadeByHeight(core, crown.y - 0.04, crown.y + 0.02, new THREE.Color("#3a2c1c"), new THREE.Color("#5f5a2c"), seed);
+  return { leaves, core, trunk };
+}
+
+/**
  * Clipped hedge along a straight run (centred on the origin, along X): a
  * finely subdivided box with softened edges and a leafy, slightly uneven
  * surface, base at y = 0.

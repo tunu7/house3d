@@ -1,8 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { Panel, PanelHeading } from "@/components/ui/Panel";
 import { useViewerStore } from "@/lib/store/viewer-store";
+import { initialQuality } from "@/lib/viewer/quality";
 
 function Toggle({ label, checked, onChange, hint }: { label: string; checked: boolean; onChange: () => void; hint?: ReactNode }) {
   return (
@@ -53,6 +54,10 @@ export function FloorControls({ solid = false }: { solid?: boolean }) {
   const toggleLayer = useViewerStore((s) => s.toggleLayer);
   const setExploded = useViewerStore((s) => s.setExploded);
   const setCutaway = useViewerStore((s) => s.setCutaway);
+  const renderMode = useViewerStore((s) => s.renderMode);
+  const setRenderMode = useViewerStore((s) => s.setRenderMode);
+  // Path tracing needs a desktop-class GPU: offered only where full-quality rendering is.
+  const [canRender] = useState(() => initialQuality().postprocessing);
 
   return (
     <Panel className="w-56 pb-2" solid={solid}>
@@ -68,6 +73,14 @@ export function FloorControls({ solid = false }: { solid?: boolean }) {
       <Toggle label="Cutaway" hint="Hides walls facing you" checked={cutaway} onChange={() => setCutaway(!cutaway)} />
       <PanelHeading>Lighting</PanelHeading>
       <TimeOfDaySwitch />
+      {canRender && (
+        <Toggle
+          label="Photoreal render"
+          hint="Path traced while the camera rests"
+          checked={renderMode}
+          onChange={() => setRenderMode(!renderMode)}
+        />
+      )}
     </Panel>
   );
 }

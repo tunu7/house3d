@@ -1,6 +1,20 @@
 import { offsetOrthoPolygon, pointInPolygon } from "@/lib/architecture/geometry";
 import { HOUSE } from "@/lib/architecture/house";
-import { GROUND_LEVEL, PILLARS, PLANTERS, PORCH, REAR_PATIO, STEP_TREADS } from "@/lib/architecture/site";
+import { insidePlot } from "@/lib/architecture/plot";
+import {
+  BOUNDARY_WALL,
+  DECK_TOP,
+  GROUND_LEVEL,
+  GYM,
+  GYM_WALLS,
+  PILLARS,
+  PLANTERS,
+  POOL,
+  POOL_DECK,
+  PORCH,
+  REAR_PATIO,
+  STEP_TREADS,
+} from "@/lib/architecture/site";
 import type { FloorId, PlanPoint, PlanRect } from "@/types/architecture";
 
 /**
@@ -17,7 +31,6 @@ export const MAX_STEP = 0.4;
 /** Feet below this are treated as the ground floor for collision. */
 const UPPER_THRESHOLD = 1.6;
 const RAIL_THICKNESS = 0.06;
-const SITE_LIMIT = 20;
 
 /** Start pose: just inside the main door, looking into the house (yaw 0 faces plan +z). */
 export const WALK_START = { x: 4.7, z: 1.0, yaw: 0, feet: HOUSE.levels.ground.ffl };
@@ -65,7 +78,7 @@ const stairRails: PlanRect[] = HOUSE.stair.handrails.map((r) =>
 );
 
 export const COLLIDERS: Record<FloorId, PlanRect[]> = {
-  ground: [...wallColliders("ground"), ...stairRails, ...PLANTERS.map((p) => p.rect), ...PILLARS],
+  ground: [...wallColliders("ground"), ...stairRails, ...PLANTERS.map((p) => p.rect), ...PILLARS, POOL, ...GYM_WALLS.map((w) => w.rect)],
   first: [
     ...wallColliders("first"),
     ...stairRails,
@@ -80,7 +93,7 @@ export const COLLIDERS: Record<FloorId, PlanRect[]> = {
 export const collisionFloor = (feet: number): FloorId => (feet < UPPER_THRESHOLD ? "ground" : "first");
 
 export function collides(x: number, z: number, rects: PlanRect[], r = PLAYER_RADIUS): boolean {
-  if (Math.abs(x - 4.5) > SITE_LIMIT || Math.abs(z - 5) > SITE_LIMIT) return true;
+  if (!insidePlot(x, z, BOUNDARY_WALL.thickness + r)) return true;
   return rects.some((q) => x > q.x0 - r && x < q.x1 + r && z > q.z0 - r && z < q.z1 + r);
 }
 
@@ -113,6 +126,7 @@ export function surfaceAt(x: number, z: number, feet: number): number {
   const tread = STEP_TREADS.find((t) => inRect(p, t.rect));
   if (tread) return tread.top;
   if (inRect(p, REAR_PATIO.rect)) return REAR_PATIO.top;
+  if (inRect(p, POOL_DECK) || inRect(p, GYM)) return DECK_TOP;
   return GROUND_LEVEL;
 }
 

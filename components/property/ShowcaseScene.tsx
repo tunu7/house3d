@@ -13,9 +13,12 @@ import { initialQuality } from "@/lib/viewer/quality";
 
 const Effects = lazy(() => import("@/components/viewer/Effects").then((m) => ({ default: m.Effects })));
 
-/** Three-quarter front view from across the garden, at about first-floor eye level. */
-const CAMERA: [number, number, number] = [13.5, 5.6, 18.5];
-const TARGET: [number, number, number] = [0, 3.0, 0];
+/**
+ * Three-quarter front view from above the garden: high enough that the slow
+ * orbit passes over the boundary palms and shows the grounds (R11).
+ */
+const CAMERA: [number, number, number] = [22, 21, 30];
+const TARGET: [number, number, number] = [0, 2.0, 0];
 
 /**
  * Hero render for the property page: the full model, slowly turning, with no
@@ -41,7 +44,8 @@ export default function ShowcaseScene({ active }: { active: boolean }) {
           setEffects(false);
         }}
       />
-      <Lighting shadowMapSize={quality.shadowMapSize} envResolution={quality.envResolution} softShadows={quality.postprocessing} />
+      <Suspense fallback={null}>
+      <Lighting shadowMapSize={quality.shadowMapSize} softShadows={quality.postprocessing} />
       <Site />
       <FacadeLamps />
       <HouseShell lampsAll={quality.lamps === "all"} />
@@ -52,16 +56,13 @@ export default function ShowcaseScene({ active }: { active: boolean }) {
         enableZoom={false}
         enablePan={false}
         enableDamping
-        minPolarAngle={Math.PI / 2.9}
-        maxPolarAngle={Math.PI / 2.15}
+        minPolarAngle={0.95}
+        maxPolarAngle={1.1}
       />
       <ReadySignal />
       <ShadowUpdater />
-      {effects && (
-        <Suspense fallback={null}>
-          <Effects />
-        </Suspense>
-      )}
+      {effects && <Effects />}
+      </Suspense>
     </Canvas>
   );
 }

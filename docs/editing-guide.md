@@ -14,12 +14,13 @@ lib/architecture/
   railings.ts     glass guard rails on the first floor
   stair.ts        half-turn stair generator
   furniture.ts    FURNITURE — items per room
-  site.ts         porch, steps, planters, path, rear patio
-  landscape.ts    plot, hedge, trees, street
+  plot.ts         SITE_PLAN — the land (30/33 × 63 m) and where the house sits on it
+  site.ts         porch, steps, planters, path, rear patio, driveway, gates, pool & gym
+  landscape.ts    compound wall, gazebo, vegetable beds, trees & palms, 3D-grass lawn, street
   details.ts      derived trim: skirting, tiling, sills, curtains, light fittings
   validation.ts   the rules `npm run validate` checks
 lib/style/theme.ts            all colours, tile finishes, room-kind → floor finish
-lib/viewer/atmosphere.ts      day / dusk sky, sun, exposure
+lib/viewer/atmosphere.ts      day / dusk sky (HDRIs in public/hdri), sun, exposure, grade, photoreal look
 lib/property.ts               property page copy, contact, per-room blurbs, gallery list
 ```
 
@@ -30,9 +31,10 @@ lib/property.ts               property page copy, contact, per-room blurbs, gall
 3. **Check** — `npm run -s check` (typecheck → validate → unit tests). Fix any `✗` lines.
 4. **Look** — `npm run dev`, open `/explore`. Useful URLs:
    `?room=<room id>`, `?hide=roof,first,walls,furniture`, `?cutaway=1`, `?exploded=1`,
-   `?time=dusk`, `?walk=1`, `?cam=x,y,z&target=x,y,z`.
+   `?time=dusk`, `?walk=1`, `?pt=1` (photoreal render), `?cam=x,y,z&target=x,y,z`.
 5. **Gallery** (optional, when the look changed) — `npm start -- -p 3123` then
-   `npm run render:gallery`.
+   `npm run render:gallery` (path traced on the GPU: about an hour for all eight shots;
+   `npm run render:gallery -- living kitchen` re-renders only those).
 
 ### `npm run model`
 
@@ -147,17 +149,38 @@ procedural texture, so the colour acts as a tint. Physical properties (roughness
 opacity) are in `components/architecture/materials.ts` and `components/furniture/parts.tsx`.
 Stone and timber facade cladding are drawn in `textures.ts` (`stone`, `cladding`, `wood`).
 
-Lighting mood (sun position, sky, exposure, lamp warmth) lives in `lib/viewer/atmosphere.ts`.
+### Lighting and the photoreal render
+
+Lighting mood (sun position, sky, exposure, grade, lamp warmth) lives in `lib/viewer/atmosphere.ts`.
+
+- **Skies** are photographed HDRIs (CC0, Poly Haven, 2K) in `public/hdri/`: day is
+  `kloofendal_48d_partly_cloudy_puresky`, dusk `qwantani_dusk_2_puresky`. To change a sky, replace
+  the file (a "puresky" HDRI, so the model's own ground shows). The sun is found in the image and
+  the image is rotated so it sits at the preset's `sunPosition` azimuth; the disc is clipped out
+  and becomes the directional light (`components/viewer/hdri.ts`).
+- **Real time vs photoreal.** `exposure`, `filmicExposure` and `grade` tune the real-time view;
+  `pathTrace` tunes the photoreal render (exposure, interior exposure and white balance, sky and
+  lamp strength). The colour `grade` is shared by both.
+- **Photoreal render** (`components/viewer/PathTracer.tsx`, toggle under Lighting, `?pt=1`) path
+  traces a proxy of the scene when the camera rests. It follows real-time intent: hidden objects
+  and anything that casts no shadow in real time are traced the same way. Opt an object out
+  with `userData.noPathTrace`; flag sub-pixel foliage materials with `userData.fineDetail`
+  (`FINE_DETAIL` in `materials.ts`) so the denoiser doesn't separate their colour from lighting.
 
 ### Site and garden
 
-`site.ts`: porch size, number of entrance steps (must add up to the plinth height — validated),
-planters, path, bollards, rear patio. `landscape.ts`: plot margin, hedge, trees (`GARDEN`),
-street.
+`plot.ts`: the land from the owner's site plan (`SITE_PLAN`: street and back widths, depth,
+setbacks); the path, walls, street and trees all follow it. `site.ts`: porch size, number of
+entrance steps (must add up to the plinth height — validated), planters, path and bollards (to
+the front gate), driveway, gates, rear patio, pool deck, pool and gym. `landscape.ts`: compound
+wall runs, driveway hedge, gazebo, vegetable beds, stepping stones, trees (boundary rows,
+driveway palms, garden specimens, woodland), and `LAWN`, the area that gets 3D grass (kept near
+the house: grass is the heaviest geometry in the scene). Renderers: `components/architecture/`
+`Grounds.tsx`, `PoolGym.tsx`, `Landscape.tsx`, `Site.tsx`.
 
 ### Owner revisions
 
-Changes requested by the owner get the next `R#`: tag the code comment `(R10)` and add a row to
+Changes requested by the owner get the next `R#`: tag the code comment `(R12)` and add a row to
 §8 of `docs/architecture-spec.md`; update the room/opening tables in §3–§6 if they changed.
 
 ## Gotchas
@@ -172,3 +195,8 @@ Changes requested by the owner get the next `R#`: tag the code comment `(R10)` a
 - **Known warnings.** `validate` always reports three `[drawing]` warnings (Bedroom 1 ×2, dining):
   documented conflicts C3/C5 in the spec. Anything else is new.
 - **Gallery images are static.** `public/gallery/*.jpg` don't update until you re-render them.
+- **Clearcoat is dropped in photoreal mode.** The path tracer renders clearcoat layers black, so
+  the proxy traces `MeshPhysicalMaterial`s without it (slightly glossier instead). Sheen,
+  transmission and textures are fine.
+- **Photoreal mode needs a desktop GPU.** It is offered only on the full-quality tier; with
+  tiles it stays within the GPU watchdog, but a sample takes seconds indoors on an M1.

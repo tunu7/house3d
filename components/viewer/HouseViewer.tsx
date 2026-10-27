@@ -13,8 +13,9 @@ const LAYER_PARAMS: LayerKey[] = ["roof", "walls", "furniture"];
 
 /**
  * Applies URL parameters to the initial viewer state — `?hide=roof,first,...`,
- * `?exploded=1`, `?time=dusk`, `?room=<id>`, `?walk=1` — so specific views can
- * be linked to and checked without the full UI.
+ * `?exploded=1`, `?time=dusk`, `?room=<id>`, `?walk=1`, `?pt=1` (path-traced
+ * render mode) — so specific views can be linked to and checked without the
+ * full UI.
  */
 function useUrlViewState() {
   useEffect(() => {
@@ -30,6 +31,7 @@ function useUrlViewState() {
     if (room) useViewerStore.getState().selectRoom(room);
     if (params.get("walk") === "1") useViewerStore.getState().setWalkMode(true);
     if (params.get("cutaway") === "1") useViewerStore.getState().setCutaway(true);
+    if (params.get("pt") === "1") useViewerStore.getState().setRenderMode(true);
   }, []);
 }
 
@@ -62,6 +64,8 @@ export default function HouseViewer() {
   // Render on demand (only when something changes) except in the walkthrough,
   // where keyboard movement needs a continuous loop.
   const walkMode = useViewerStore((s) => s.walkMode);
+  // Render mode is slow by design: it keeps post-processing on and is never downgraded.
+  const renderMode = useViewerStore((s) => s.renderMode);
   return (
     <Canvas
       shadows="percentage"
@@ -80,17 +84,19 @@ export default function HouseViewer() {
       }}
     >
       {/* On a sustained frame-rate drop: lower the pixel ratio and drop post-processing; restore on recovery. */}
-      <PerformanceMonitor
-        onDecline={() => {
-          setDpr(quality.dpr[0]);
-          setEffects(false);
-        }}
-        onIncline={() => {
-          setDpr(quality.dpr[1]);
-          setEffects(quality.postprocessing);
-        }}
-      />
-      <HouseScene target={vecParam("target", DEFAULT_TARGET)} quality={quality} effects={forceFx || (effects && !noFx)} />
+      {!renderMode && (
+        <PerformanceMonitor
+          onDecline={() => {
+            setDpr(quality.dpr[0]);
+            setEffects(false);
+          }}
+          onIncline={() => {
+            setDpr(quality.dpr[1]);
+            setEffects(quality.postprocessing);
+          }}
+        />
+      )}
+      <HouseScene target={vecParam("target", DEFAULT_TARGET)} quality={quality} effects={forceFx || renderMode || (effects && !noFx)} />
     </Canvas>
   );
 }
